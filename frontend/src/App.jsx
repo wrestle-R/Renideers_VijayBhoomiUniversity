@@ -6,6 +6,7 @@ import { LoadingPage } from "./components/LoadingPage";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
+import Profiles from "./pages/Dashboard/Profiles";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useUser();
@@ -38,6 +39,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Dashboard />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/dashboard/profiles" 
+        element={
+          <ProtectedRoute>
+            <Profiles />
           </ProtectedRoute>
         } 
       />
