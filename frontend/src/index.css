@@ -71,19 +71,20 @@
 :root {
   --radius: 0.25rem;
   --background: oklch(0.9970 0 0);
-  --foreground: oklch(0.2178 0 0);
+  /* Light mode text color */
+  --foreground: #000000;
   --card: oklch(1.0000 0 0);
-  --card-foreground: oklch(0.2178 0 0);
+  --card-foreground: var(--foreground);
   --popover: oklch(1.0000 0 0);
-  --popover-foreground: oklch(0.2178 0 0);
+  --popover-foreground: var(--foreground);
   --primary: oklch(0.4254 0.1159 144.3078);
-  --primary-foreground: oklch(1.0000 0 0);
+  --primary-foreground: var(--foreground);
   --secondary: oklch(0.9067 0 0);
-  --secondary-foreground: oklch(0.2178 0 0);
+  --secondary-foreground: var(--foreground);
   --muted: oklch(0.9571 0.0210 147.6360);
-  --muted-foreground: oklch(0.4254 0.1159 144.3078);
+  --muted-foreground: rgba(0,0,0,0.7);
   --accent: oklch(0.9761 0 0);
-  --accent-foreground: oklch(0.2178 0 0);
+  --accent-foreground: var(--foreground);
   --destructive: oklch(0.6368 0.2078 25.3313);
   --border: oklch(0.9067 0 0);
   --input: oklch(1.0000 0 0);
@@ -91,17 +92,17 @@
   --chart-1: oklch(0.4254 0.1159 144.3078);
   --chart-2: oklch(0.5234 0.1347 144.1672);
   --chart-3: oklch(0.5752 0.1446 144.1813);
-  --chart-4: oklch(0.6731 0.1624 144.2083);
+  --chart-4: oklch(0.6731 0 0 144.2083);
   --chart-5: oklch(0.7185 0.1417 144.8887);
   --sidebar: oklch(0.9571 0.0210 147.6360);
-  --sidebar-foreground: oklch(0.4254 0.1159 144.3078);
+  --sidebar-foreground: var(--foreground);
   --sidebar-primary: oklch(0.4254 0.1159 144.3078);
-  --sidebar-primary-foreground: oklch(1.0000 0 0);
+  --sidebar-primary-foreground: var(--foreground);
   --sidebar-accent: oklch(0.8952 0.0504 146.0366);
-  --sidebar-accent-foreground: oklch(0.4254 0.1159 144.3078);
+  --sidebar-accent-foreground: var(--foreground);
   --sidebar-border: oklch(0.8292 0.0827 145.8169);
   --sidebar-ring: oklch(0.4254 0.1159 144.3078);
-  --destructive-foreground: oklch(1.0000 0 0);
+  --destructive-foreground: var(--foreground);
   --font-sans: 'Outfit', sans-serif;
   --font-serif: 'Lora', serif;
   --font-mono: 'Fira Code', monospace;
@@ -126,19 +127,20 @@
 
 .dark {
   --background: oklch(0 0 0);
-  --foreground: oklch(0.9067 0 0);
+  /* Dark mode text color */
+  --foreground: #ffffff;
   --card: oklch(0.2178 0 0);
-  --card-foreground: oklch(0.9067 0 0);
+  --card-foreground: var(--foreground);
   --popover: oklch(0.2178 0 0);
-  --popover-foreground: oklch(0.9067 0 0);
+  --popover-foreground: var(--foreground);
   --primary: oklch(0.5234 0.1347 144.1672);
-  --primary-foreground: oklch(1.0000 0 0);
+  --primary-foreground: var(--foreground);
   --secondary: oklch(0.2931 0 0);
-  --secondary-foreground: oklch(0.9067 0 0);
+  --secondary-foreground: var(--foreground);
   --muted: oklch(0.2815 0.0231 168.0128);
-  --muted-foreground: oklch(0.7660 0.1179 145.2950);
+  --muted-foreground: rgba(255,255,255,0.8);
   --accent: oklch(0.2931 0 0);
-  --accent-foreground: oklch(0.9067 0 0);
+  --accent-foreground: var(--foreground);
   --destructive: oklch(0.6368 0.2078 25.3313);
   --border: oklch(0.3600 0 0);
   --input: oklch(0.2178 0 0);
@@ -149,14 +151,14 @@
   --chart-4: oklch(0.7185 0.1417 144.8887);
   --chart-5: oklch(0.7660 0.1179 145.2950);
   --sidebar: oklch(0.2815 0.0231 168.0128);
-  --sidebar-foreground: oklch(0.7660 0.1179 145.2950);
+  --sidebar-foreground: var(--foreground);
   --sidebar-primary: oklch(0.5234 0.1347 144.1672);
-  --sidebar-primary-foreground: oklch(1.0000 0 0);
+  --sidebar-primary-foreground: var(--foreground);
   --sidebar-accent: oklch(0.3731 0.0382 161.1302);
-  --sidebar-accent-foreground: oklch(0.7660 0.1179 145.2950);
+  --sidebar-accent-foreground: var(--foreground);
   --sidebar-border: oklch(0.4145 0.0309 160.6235);
   --sidebar-ring: oklch(0.5234 0.1347 144.1672);
-  --destructive-foreground: oklch(1.0000 0 0);
+  --destructive-foreground: var(--foreground);
   --radius: 0.25rem;
   --font-sans: 'Outfit', sans-serif;
   --font-serif: 'Lora', serif;
@@ -186,5 +188,36 @@
   body {
     @apply bg-background text-foreground;
     letter-spacing: var(--tracking-normal);
+  }
+}
+
+/* Marquee animations used by `testimonials-with-marquee.jsx` */
+@layer utilities {
+  .animate-marquee {
+    animation-name: marquee;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-duration: var(--duration, 40s);
+    will-change: transform;
+    display: flex;
+  }
+
+  .animate-marquee-reverse {
+    animation-name: marquee-reverse;
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-duration: var(--duration, 45s);
+    will-change: transform;
+    display: flex;
+  }
+
+  @keyframes marquee {
+    from { transform: translateX(0%); }
+    to   { transform: translateX(-50%); }
+  }
+
+  @keyframes marquee-reverse {
+    from { transform: translateX(0%); }
+    to   { transform: translateX(50%); }
   }
 }

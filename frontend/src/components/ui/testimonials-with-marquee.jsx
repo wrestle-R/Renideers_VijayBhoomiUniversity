@@ -10,7 +10,7 @@ export function TestimonialsSection({
 }) {
   return (
     <section
-      className={cn("bg-background text-foreground", "max-w-5xl mx-auto py-12 sm:py-24 md:py-32 px-0", className)}>
+      className={cn("bg-background text-foreground", "max-w-6xl mx-auto py-12 sm:py-24 md:py-32 px-0", className)}>
       <div
         className="mx-auto flex max-w-container flex-col items-center gap-4 text-center sm:gap-16">
         <div className="flex flex-col items-center gap-4 px-4 sm:gap-8">
@@ -31,17 +31,17 @@ export function TestimonialsSection({
             className="group flex overflow-hidden p-2 [--gap:1rem] [gap:var(--gap)] flex-row [--duration:40s]">
             <div
               className="flex shrink-0 justify-around [gap:var(--gap)] animate-marquee flex-row group-hover:[animation-play-state:paused]">
-              {[...Array(6)].map((_, setIndex) => (
+              {[...Array(4)].map((_, setIndex) => (
                 topTestimonials.map((testimonial, i) => (
-                  <TestimonialCard key={`row1-${setIndex}-${i}`} {...testimonial} />
+                  <TestimonialCard key={`row1-${setIndex}-${i}`} {...testimonial} className="hover:scale-105 transition-transform" />
                 ))
               ))}
             </div>
             <div
               className="flex shrink-0 justify-around [gap:var(--gap)] animate-marquee flex-row group-hover:[animation-play-state:paused]">
-              {[...Array(6)].map((_, setIndex) => (
+              {[...Array(4)].map((_, setIndex) => (
                 topTestimonials.map((testimonial, i) => (
-                  <TestimonialCard key={`row1-duplicate-${setIndex}-${i}`} {...testimonial} />
+                  <TestimonialCard key={`row1-duplicate-${setIndex}-${i}`} {...testimonial} className="hover:scale-105 transition-transform" />
                 ))
               ))}
             </div>
@@ -52,17 +52,17 @@ export function TestimonialsSection({
             className="group flex overflow-hidden p-2 [--gap:1rem] [gap:var(--gap)] flex-row [--duration:45s]">
             <div
               className="flex shrink-0 justify-around [gap:var(--gap)] animate-marquee-reverse flex-row group-hover:[animation-play-state:paused]">
-              {[...Array(6)].map((_, setIndex) => (
+              {[...Array(4)].map((_, setIndex) => (
                 bottomTestimonials.map((testimonial, i) => (
-                  <TestimonialCard key={`row2-${setIndex}-${i}`} {...testimonial} />
+                  <TestimonialCard key={`row2-${setIndex}-${i}`} {...testimonial} className="hover:scale-105 transition-transform" />
                 ))
               ))}
             </div>
             <div
               className="flex shrink-0 justify-around [gap:var(--gap)] animate-marquee-reverse flex-row group-hover:[animation-play-state:paused]">
-              {[...Array(6)].map((_, setIndex) => (
+              {[...Array(4)].map((_, setIndex) => (
                 bottomTestimonials.map((testimonial, i) => (
-                  <TestimonialCard key={`row2-duplicate-${setIndex}-${i}`} {...testimonial} />
+                  <TestimonialCard key={`row2-duplicate-${setIndex}-${i}`} {...testimonial} className="hover:scale-105 transition-transform" />
                 ))
               ))}
             </div>

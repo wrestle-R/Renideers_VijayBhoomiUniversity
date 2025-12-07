@@ -30,6 +30,7 @@ export const Navbar = () => {
                         <div className="flex w-full justify-between lg:w-auto">
                             <Link to="/" aria-label="home" className="flex items-center space-x-2">
                                 <img src="/logo.png" alt="Trekky" className="h-8 w-auto" />
+                                <span className="ml-1 text-lg font-semibold tracking-tight text-foreground">Trekky</span>
                             </Link>
 
                             <div className="flex items-center gap-2 lg:hidden">

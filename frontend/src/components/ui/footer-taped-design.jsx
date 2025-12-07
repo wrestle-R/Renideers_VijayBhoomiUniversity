@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
-import { Linkedin, Github } from 'lucide-react';
-import { FaBrain } from "react-icons/fa";
+import { Instagram, Facebook } from 'lucide-react';
+import { Logo } from '@/components/logo';
+import { ThemeToggle } from '@/components/ThemeToggle';
 
 const tape = <svg
   xmlns="http://www.w3.org/2000/svg"
@@ -19,7 +20,7 @@ export const Component = () => {
 
   return (
     <footer className="my-8 px-4 max-w-5xl text-foreground mx-auto">
-      <div className="relative bg-card rounded-3xl max-w-5xl mx-auto px-4 py-10 flex flex-col md:flex-row justify-between items-center gap-6 border">
+      <div className="relative bg-emerald-50 rounded-3xl max-w-5xl mx-auto px-4 py-10 flex flex-col md:flex-row justify-between items-center gap-6 border">
         <div className="hidden md:block absolute -top-4 -left-8 w-[80px] h-[36px] scale-75">
           {tape}
         </div>
@@ -28,13 +29,14 @@ export const Component = () => {
         </div>
         <div className="flex flex-col md:flex-row items-start justify-between gap-4 md:gap-10 px-2 md:px-8 flex-1">
           <div className='flex flex-col items-start gap-2'>
-            <div
-              className="flex flex-row gap-1 items-center justify-start text-2xl font-display font-extrabold text-foreground">
-              {/* Use react icon instead of image */}
-              <span className="text-2xl"><FaBrain className="h-6 w-6" /></span> Neurolytics
+            <div className="flex flex-row gap-3 items-center justify-start">
+              <div className="flex flex-col">
+                <div className="text-lg font-display font-semibold">Trekky</div>
+                <div className="text-sm text-muted-foreground">Curated treks & outdoor adventures</div>
+              </div>
             </div>
             <p className='text-muted-foreground font-medium text-base w-full md:w-4/5'>
-              Democratizing cognitive science research through accessible, high-precision behavioral experiments.
+              Connecting adventurers with unforgettable trekking experiences across scenic trails and expert guides.
             </p>
           </div>
 
@@ -42,9 +44,9 @@ export const Component = () => {
             <div className='flex flex-col gap-1 md:gap-4'>
               <h4 className='uppercase font-display text-md text-muted-foreground font-semibold'>Products</h4>
               <div className="flex flex-wrap md:flex-col gap-2 text-sm text-foreground items-start">
-                <Link to="/platform" className='text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap font-medium'>Platform</Link>
-                <Link to="/experiments" className='text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap font-medium'>Experiments</Link>
-                <Link to="/pricing" className='text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap font-medium'>Pricing</Link>
+                <Link to="/trips" className='text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap font-medium'>Trips</Link>
+                <Link to="/destinations" className='text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap font-medium'>Destinations</Link>
+                <Link to="/bookings" className='text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap font-medium'>Bookings</Link>
               </div>
             </div>
 
@@ -52,7 +54,8 @@ export const Component = () => {
               <h4 className='uppercase font-display text-md text-muted-foreground font-semibold'>Company</h4>
               <div className="flex flex-col gap-2 text-sm text-foreground items-start">
                 <Link to="/about" className='text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap font-medium'>About</Link>
-                <Link to="/research" className='text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap font-medium'>Research</Link>
+                <Link to="/guides" className='text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap font-medium'>Guides</Link>
+                <Link to="/contact" className='text-muted-foreground hover:text-foreground transition-colors whitespace-nowrap font-medium'>Contact</Link>
               </div>
             </div>
 
@@ -69,7 +72,7 @@ export const Component = () => {
       <div className="my-12 px-4 md:px-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 text-sm text-muted-foreground">
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-8 items-start sm:items-center">
           <p className="whitespace-nowrap">
-            ©{currentYear} Neurolytics. All rights reserved.
+            ©{currentYear} Trekky. All rights reserved.
           </p>
           <div className="flex flex-row gap-4">
             <Link to="/privacy-policy" className="text-muted-foreground hover:text-foreground transition-colors">Privacy Policy</Link>
@@ -77,12 +80,12 @@ export const Component = () => {
           </div>
         </div>
         <div className="flex gap-4 items-center">
-          <span className="hover:text-foreground transition-colors" aria-hidden>
-            <Linkedin className="w-5 h-5 fill-current" />
-          </span>
-          <span className="hover:text-foreground transition-colors" aria-hidden>
-            <Github className="w-5 h-5 fill-current" />
-          </span>
+          <a href="https://instagram.com/trekky" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors" aria-label="Instagram">
+            <Instagram className="w-5 h-5" />
+          </a>
+          <a href="https://facebook.com/trekky" target="_blank" rel="noreferrer" className="hover:text-foreground transition-colors" aria-label="Facebook">
+            <Facebook className="w-5 h-5" />
+          </a>
         </div>
       </div>
     </footer>
