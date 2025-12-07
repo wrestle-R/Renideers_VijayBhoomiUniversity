@@ -1,3 +1,4 @@
+const mongoose = require('mongoose');
 const User = require('../models/User');
 const Profile = require('../models/UserProfiles');
 
@@ -39,8 +40,22 @@ exports.auth = async (req, res) => {
 exports.getProfile = async (req, res) => {
   try {
     const { userId } = req.params;
-    const profile = await Profile.findOne({ user_id: userId });
+    
+    // Check if userId is a valid ObjectId
+    const isObjectId = mongoose.Types.ObjectId.isValid(userId);
+    
+    let query;
+    if (isObjectId) {
+      query = { user_id: userId };
+    } else {
+      query = { username: userId };
+    }
+
+    const profile = await Profile.findOne(query).populate('user_id', 'fullName email photoUrl');
+    
     if (!profile) {
+      // If we searched by username and failed, maybe it was an ID that looked like a username? Unlikely if we check isValid.
+      // But if we searched by ID and failed, maybe try username? (Unlikely if isValid is strict)
       return res.status(404).json({ message: 'Profile not found' });
     }
     res.json(profile);
@@ -58,15 +73,45 @@ exports.updateProfile = async (req, res) => {
 
     if (profile) {
       // Update
+      // If username is being updated, ensure uniqueness (handled by DB unique index, but good to catch)
       Object.assign(profile, updateData);
-      await profile.save();
+      try {
+        await profile.save();
+      } catch (err) {
+        if (err.code === 11000 && err.keyPattern && err.keyPattern.username) {
+            return res.status(400).json({ message: 'Username already taken' });
+        }
+        throw err;
+      }
     } else {
       // Create
+      // Generate default username if not provided
+      if (!updateData.username) {
+        const user = await User.findById(userId);
+        if (user) {
+            const emailPrefix = user.email.split('@')[0];
+            const randomNum = Math.floor(Math.random() * 11); // 0 to 10
+            let newUsername = `${emailPrefix}${randomNum}`;
+            
+            // Simple check for collision could be good, but for now let's trust the random or fail
+            // To be safer, we could loop, but let's stick to the requirement
+            updateData.username = newUsername;
+        }
+      }
+
       profile = new Profile({
         user_id: userId,
         ...updateData
       });
-      await profile.save();
+      
+      try {
+        await profile.save();
+      } catch (err) {
+         if (err.code === 11000 && err.keyPattern && err.keyPattern.username) {
+            return res.status(400).json({ message: 'Username already taken' });
+        }
+        throw err;
+      }
     }
     res.json(profile);
   } catch (error) {

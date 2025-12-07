@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { Home, LogOut, User } from "lucide-react";
+import { Home, LogOut, User, Compass, Users } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { ThemeToggle } from "./ThemeToggle";
@@ -25,6 +25,8 @@ export function UserSidebar() {
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/dashboard" },
     { icon: User, label: "Profiles", path: "/dashboard/profiles" },
+    { icon: Compass, label: "Explore", path: "/explore" },
+    { icon: Users, label: "My Friends", path: "/followers" },
   ];
 
   const isActive = (path) => location.pathname === path;

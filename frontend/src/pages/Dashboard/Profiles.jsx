@@ -12,6 +12,7 @@ export default function Profiles() {
   const { user } = useUser();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
+    username: "",
     bio: "",
     location: "",
     experienceLevel: "beginner",
@@ -35,6 +36,7 @@ export default function Profiles() {
       if (res.ok) {
         const data = await res.json();
         setFormData({
+          username: data.username || "",
           bio: data.bio || "",
           location: data.location || "",
           experienceLevel: data.experienceLevel || "beginner",
@@ -62,6 +64,7 @@ export default function Profiles() {
     try {
       const payload = {
         userId: user.mongo_uid,
+        username: formData.username,
         bio: formData.bio,
         location: formData.location,
         experienceLevel: formData.experienceLevel,
@@ -112,6 +115,11 @@ export default function Profiles() {
               <CardContent>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   
+                  <div className="space-y-2">
+                    <Label htmlFor="username">Username</Label>
+                    <Input id="username" name="username" value={formData.username} onChange={handleChange} placeholder="username" />
+                  </div>
+
                   <div className="space-y-2">
                     <Label htmlFor="bio">Bio</Label>
                     <Input id="bio" name="bio" value={formData.bio} onChange={handleChange} placeholder="Tell us about yourself" />

@@ -7,6 +7,11 @@ import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Profiles from "./pages/Dashboard/Profiles";
+import Explore from "./pages/Explore";
+import Followers from "./pages/Followers";
+import UserProfile from "./pages/UserProfile";
+import NotFound from "./pages/NotFound";
+import Requests from "./pages/Requests";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useUser();
@@ -50,6 +55,39 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
+      <Route 
+        path="/explore" 
+        element={
+          <ProtectedRoute>
+            <Explore />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/followers" 
+        element={
+          <ProtectedRoute>
+            <Followers />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/requests" 
+        element={
+          <ProtectedRoute>
+            <Requests />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/:username" 
+        element={
+          <ProtectedRoute>
+            <UserProfile />
+          </ProtectedRoute>
+        } 
+      />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   );
 }

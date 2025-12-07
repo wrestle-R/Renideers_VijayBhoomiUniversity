@@ -14,6 +14,13 @@ const ProfileSchema = new mongoose.Schema({
         unique: true, // one profile per user
     },
 
+    username: {
+        type: String,
+        trim: true,
+        unique: true,
+        sparse: true // Allows null/undefined values to not conflict, though we aim to populate it
+    },
+
     // core profile fields
     goals: [{ type: String, trim: true }], // e.g. ["Complete 100km this year", "Try a new trail"]
     motivations: [{ type: String, trim: true }], // array of motivations
