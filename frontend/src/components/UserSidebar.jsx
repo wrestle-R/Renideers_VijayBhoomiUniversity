@@ -1,109 +1,149 @@
-import { ThemeToggle } from "./ThemeToggle";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarSeparator,
-} from "./ui/sidebar";
-import { Home, Mountain, Trophy, Settings, LogOut, User } from "lucide-react";
-import { useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../context/UserContext";
+import { Home, LogOut } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
+import { Button } from "./ui/button";
+import { ThemeToggle } from "./ThemeToggle";
+import { useState } from "react";
 
 export function UserSidebar() {
   const { user, logout } = useUser();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [isOpen, setIsOpen] = useState(true); // Mobile only
 
   const handleLogout = async () => {
-    await logout();
-    navigate("/");
+    try {
+      await logout();
+      navigate("/");
+    } catch (error) {
+      console.error("Logout error:", error);
+    }
   };
 
   const menuItems = [
-    { icon: Home, label: "Dashboard", href: "/dashboard" },
+    { icon: Home, label: "Dashboard", path: "/dashboard" },
   ];
 
-  return (
-    <Sidebar className="border-r border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <SidebarHeader className="border-b border-border/40 px-6 py-4">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-gradient-to-br from-green-500 to-teal-600 text-white font-bold shadow-md">
-            <Mountain className="h-6 w-6" />
-          </div>
-          <div className="flex flex-col">
-            <span className="text-lg font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent">
-              Trekky
-            </span>
-            <span className="text-xs text-muted-foreground">Adventure awaits</span>
-          </div>
-        </div>
-      </SidebarHeader>
+  const isActive = (path) => location.pathname === path;
 
-      <SidebarContent className="flex flex-col gap-0 px-3 py-4">
-        {user && (
-          <>
-            {/* User Profile Card */}
-            <div className="mb-6 rounded-lg bg-gradient-to-br from-green-50 to-teal-50 dark:from-green-950/30 dark:to-teal-950/30 p-4 border border-green-200 dark:border-green-800/50">
+  return (
+    <>
+      {/* Backdrop for mobile */}
+      {isOpen && (
+        <motion.div
+          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setIsOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <motion.div
+        className="fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border z-50 flex flex-col transition-all duration-300 overflow-x-hidden w-64 lg:w-64"
+        initial={false}
+        animate={{ x: 0 }}
+      >
+        {/* Header */}
+        <div className="p-4 border-b border-sidebar-border flex items-center gap-3">
+          <img src="/logo.png" alt="Trekky" className="h-8 w-auto flex-shrink-0" />
+          <span className="font-semibold text-lg">Trekky</span>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4">
+          <ul className="space-y-2">
+            {menuItems.map((item, index) => {
+              const active = isActive(item.path);
+              return (
+                <li key={index} className="relative">
+                  {/* Active indicator */}
+                  {active && (
+                    <div className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-primary rounded-r-full" />
+                  )}
+                  <Button
+                    variant={active ? "default" : "ghost"}
+                    onClick={() => navigate(item.path)}
+                    className={`w-full justify-start gap-3 transition-all duration-200 ${
+                      isOpen ? "px-3" : "px-0 justify-center"
+                    } ${
+                      active
+                        ? "bg-primary/10 text-primary border border-primary/20 shadow-sm ml-2 hover:bg-primary/20 hover:text-primary"
+                        : "text-sidebar-foreground hover:text-primary hover:bg-primary/5"
+                    }`}
+                  >
+                    <item.icon className={`w-5 h-5 flex-shrink-0 ${active ? "text-primary" : ""}`} />
+                    <motion.span
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -10 }}
+                      className={`${active ? "font-semibold" : ""}`}
+                    >
+                      {item.label}
+                    </motion.span>
+                  </Button>
+                </li>
+              );
+            })}
+          </ul>
+        </nav>
+
+        {/* Footer */}
+        <div className="border-t border-sidebar-border">
+          {/* User Profile */}
+          {user && (
+            <div className="p-4 border-b border-sidebar-border">
               <div className="flex items-center gap-3">
-                <Avatar className="h-12 w-12 border-2 border-green-400 shadow-md">
+                <Avatar className="w-10 h-10 flex-shrink-0 border border-sidebar-border">
                   <AvatarImage src={user.photoUrl} alt={user.fullName} />
-                  <AvatarFallback className="bg-gradient-to-br from-green-500 to-teal-600 text-white font-bold">
+                  <AvatarFallback className="bg-primary text-primary-foreground font-bold">
                     {user.fullName?.charAt(0) || "U"}
                   </AvatarFallback>
                 </Avatar>
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm truncate text-foreground">
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -10 }}
+                  className="overflow-hidden flex-1 min-w-0"
+                >
+                  <p className="text-sidebar-foreground font-medium truncate text-sm">
                     {user.fullName || "User"}
                   </p>
-                  <p className="text-xs text-muted-foreground truncate">
+                  <p className="text-sidebar-foreground/70 truncate text-xs">
                     {user.email}
                   </p>
-                </div>
+                </motion.div>
               </div>
             </div>
-            <SidebarSeparator className="my-2" />
-          </>
-        )}
+          )}
 
-        {/* Navigation Menu */}
-        <SidebarMenu className="gap-1">
-          {menuItems.map((item) => (
-            <SidebarMenuItem key={item.label}>
-              <SidebarMenuButton
-                asChild
-                className="rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 hover:bg-green-100 dark:hover:bg-green-950/50 hover:text-green-700 dark:hover:text-green-400 group"
-              >
-                <a href={item.href} className="flex items-center gap-3">
-                  <item.icon className="h-5 w-5 transition-transform group-hover:scale-110" />
-                  <span>{item.label}</span>
-                </a>
-              </SidebarMenuButton>
-            </SidebarMenuItem>
-          ))}
-        </SidebarMenu>
-      </SidebarContent>
+          {/* Theme Toggle */}
+          <div className="p-4 border-b border-sidebar-border">
+            <ThemeToggle showLabel={true} className="w-full justify-start text-sidebar-foreground hover:text-primary hover:bg-primary/5" />
+          </div>
 
-      <SidebarFooter className="border-t border-border/40 px-3 py-4">
-        <div className="space-y-3">
-          <SidebarSeparator className="my-2" />
-          
-          {/* Footer Actions */}
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <button
+          {/* Logout Button */}
+          <div className="p-4">
+            <Button
               onClick={handleLogout}
-              className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium text-destructive hover:bg-destructive/10 rounded-lg transition-all duration-200 hover:text-destructive/90"
+              variant="ghost"
+              className="w-full justify-start gap-3 px-3 text-destructive hover:text-destructive hover:bg-destructive/10"
             >
-              <LogOut className="h-5 w-5" />
-              <span>Logout</span>
-            </button>
+              <LogOut className="w-5 h-5 flex-shrink-0" />
+              <motion.span
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -10 }}
+              >
+                Sign Out
+              </motion.span>
+            </Button>
           </div>
         </div>
-      </SidebarFooter>
-    </Sidebar>
+      </motion.div>
+    </>
   );
 }

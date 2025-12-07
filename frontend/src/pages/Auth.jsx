@@ -5,10 +5,12 @@ import { Input } from "../components/ui/input";
 import { Label } from "../components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../components/ui/card";
 import { ThemeToggle } from "../components/ThemeToggle";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
+import { Navbar } from "../components/Navbar";
 
 export default function Auth() {
-  const [isLogin, setIsLogin] = useState(true);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isLogin = searchParams.get("mode") !== "signup";
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [fullName, setFullName] = useState("");
@@ -40,10 +42,8 @@ export default function Auth() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background p-4">
-      <div className="absolute top-4 right-4">
-        <ThemeToggle />
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 pt-20">
+      <Navbar />
       <Card className="w-full max-w-md">
         <CardHeader>
           <CardTitle>{isLogin ? "Login to Trekky" : "Create an Account"}</CardTitle>
@@ -57,6 +57,7 @@ export default function Auth() {
               <div className="space-y-2">
                 <Label htmlFor="fullName">Full Name</Label>
                 <Input 
+                  className="border-2 border-gray-300 dark:border-gray-600"
                   id="fullName" 
                   placeholder="John Doe" 
                   value={fullName} 
@@ -68,6 +69,7 @@ export default function Auth() {
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <Input 
+                className="border-2 border-gray-300 dark:border-gray-600"
                 id="email" 
                 type="email" 
                 placeholder="m@example.com" 
@@ -79,6 +81,7 @@ export default function Auth() {
             <div className="space-y-2">
               <Label htmlFor="password">Password</Label>
               <Input 
+                className="border-2 border-gray-300 dark:border-gray-600"
                 id="password" 
                 type="password" 
                 value={password} 
@@ -95,17 +98,17 @@ export default function Auth() {
               <span className="w-full border-t" />
             </div>
             <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
+              <span className="bg-card px-2 text-muted-foreground">
                 Or continue with
               </span>
             </div>
           </div>
-          <Button variant="outline" className="w-full" onClick={handleGoogleLogin}>
+          <Button variant="outline" className="w-full border-2 border-gray-300 dark:border-gray-600" onClick={handleGoogleLogin}>
             Continue with Google
           </Button>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <Button variant="link" onClick={() => setIsLogin(!isLogin)}>
+          <Button variant="link" onClick={() => setSearchParams({ mode: isLogin ? "signup" : "login" })}>
             {isLogin ? "Don't have an account? Sign Up" : "Already have an account? Login"}
           </Button>
         </CardFooter>
