@@ -29,6 +29,42 @@ exports.auth = async (req, res) => {
     });
 
     await user.save();
+
+    // Auto-generate profile
+    try {
+        const emailPrefix = email.split('@')[0];
+        let username = `${emailPrefix}${Math.floor(Math.random() * 11)}`;
+        
+        // Ensure uniqueness
+        let isUnique = false;
+        let attempts = 0;
+        while (!isUnique && attempts < 5) {
+            const existing = await Profile.findOne({ username });
+            if (!existing) {
+                isUnique = true;
+            } else {
+                // Try a larger range if collision
+                username = `${emailPrefix}${Math.floor(Math.random() * 1000)}`;
+                attempts++;
+            }
+        }
+        
+        if (!isUnique) {
+             // Fallback to timestamp
+             username = `${emailPrefix}${Date.now()}`;
+        }
+
+        const profile = new Profile({
+            user_id: user._id,
+            username: username,
+            visibility: 'private'
+        });
+        await profile.save();
+        console.log('Profile auto-generated:', profile);
+    } catch (profileErr) {
+        console.error('Error auto-generating profile:', profileErr);
+    }
+
     console.log('User created:', user);
     res.status(201).json(user);
   } catch (error) {

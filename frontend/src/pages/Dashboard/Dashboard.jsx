@@ -1,10 +1,10 @@
-import { useUser } from "../context/UserContext";
-import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { SidebarProvider } from "../components/ui/sidebar";
-import { UserSidebar } from "../components/UserSidebar";
+import { useUser } from "../../context/UserContext";
+import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
+import { SidebarProvider } from "../../components/ui/sidebar";
+import { UserSidebar } from "../../components/UserSidebar";
 import { Mountain, Trophy, Coins, Users } from "lucide-react";
-import { LoadingPage } from "../components/LoadingPage";
+import { LoadingPage } from "../../components/LoadingPage";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link } from "react-router-dom";

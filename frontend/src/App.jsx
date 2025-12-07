@@ -5,13 +5,13 @@ import { Toaster } from "react-hot-toast";
 import { LoadingPage } from "./components/LoadingPage";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/Dashboard/Dashboard";
 import Profiles from "./pages/Dashboard/Profiles";
-import Explore from "./pages/Explore";
-import Followers from "./pages/Followers";
+import Explore from "./pages/Dashboard/Explore";
+import Followers from "./pages/Dashboard/Followers";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
-import Requests from "./pages/Requests";
+import Requests from "./pages/Dashboard/Requests";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useUser();
