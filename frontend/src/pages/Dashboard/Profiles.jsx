@@ -124,7 +124,7 @@ export default function Profiles() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <UserSidebar />
-        <main className="flex-1 overflow-auto p-8">
+        <main className="flex-1 overflow-auto p-8 pb-24 lg:pb-8 lg:ml-64">
           <div className="mx-auto max-w-3xl space-y-8">
             <div className="flex items-center justify-between space-y-2">
               <h2 className="text-3xl font-bold tracking-tight">Profile Settings</h2>

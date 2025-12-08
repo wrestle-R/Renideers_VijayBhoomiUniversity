@@ -202,7 +202,7 @@ export default function ClubDetails() {
   return (
     <div className="flex min-h-screen bg-background">
       <UserSidebar />
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-0 lg:ml-64 p-8 pb-24 lg:pb-8">
         <div className="max-w-6xl mx-auto space-y-8">
           <Button variant="ghost" onClick={() => navigate("/clubs")} className="mb-4">
             <ArrowLeft className="w-4 h-4 mr-2" />

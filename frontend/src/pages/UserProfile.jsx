@@ -39,7 +39,7 @@ const UserProfile = () => {
   return (
     <div className="flex">
       <UserSidebar />
-      <div className="flex-1 lg:ml-64 container mx-auto p-6 max-w-4xl">
+      <div className="flex-1 lg:ml-64 container mx-auto p-6 pb-24 lg:pb-6 max-w-4xl">
         <Card>
           <CardHeader className="flex flex-row items-center gap-4">
             <Avatar className="h-20 w-20">

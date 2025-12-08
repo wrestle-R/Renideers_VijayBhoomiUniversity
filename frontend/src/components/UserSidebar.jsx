@@ -1,17 +1,15 @@
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { Home, LogOut, User, Compass, Users, Mountain } from "lucide-react";
+import { Home, LogOut, User, Compass, Users, Mountain, Camera } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { ThemeToggle } from "./ThemeToggle";
-import { useState } from "react";
 
 export function UserSidebar() {
   const { user, logout } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
-  const [isOpen, setIsOpen] = useState(true); // Mobile only
 
   const handleLogout = async () => {
     try {
@@ -26,7 +24,7 @@ export function UserSidebar() {
     { icon: Home, label: "Dashboard", path: "/dashboard" },
     { icon: User, label: "Profiles", path: "/dashboard/profiles" },
     { icon: Compass, label: "Explore", path: "/explore" },
-    { icon: Users, label: "My Friends", path: "/followers" },
+    { icon: Camera, label: "Trek AI", path: "/trek-ai" },
     { icon: Mountain, label: "Treks", path: "/treks" },
     { icon: Users, label: "Clubs", path: "/clubs" },
   ];
@@ -35,20 +33,9 @@ export function UserSidebar() {
 
   return (
     <>
-      {/* Backdrop for mobile */}
-      {isOpen && (
-        <motion.div
-          className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          onClick={() => setIsOpen(false)}
-        />
-      )}
-
-      {/* Sidebar */}
+      {/* Desktop Sidebar */}
       <motion.div
-        className="fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border z-50 flex flex-col transition-all duration-300 overflow-x-hidden w-64 lg:w-64"
+        className="hidden lg:flex fixed left-0 top-0 h-full bg-sidebar border-r border-sidebar-border z-50 flex-col transition-all duration-300 overflow-x-hidden w-64"
         initial={false}
         animate={{ x: 0 }}
       >
@@ -72,9 +59,7 @@ export function UserSidebar() {
                   <Button
                     variant={active ? "default" : "ghost"}
                     onClick={() => navigate(item.path)}
-                    className={`w-full justify-start gap-3 transition-all duration-200 ${
-                      isOpen ? "px-3" : "px-0 justify-center"
-                    } ${
+                    className={`w-full justify-start gap-3 transition-all duration-200 px-3 ${
                       active
                         ? "bg-primary/10 text-primary border border-primary/20 shadow-sm ml-2 hover:bg-primary/20 hover:text-primary"
                         : "text-sidebar-foreground hover:text-primary hover:bg-primary/5"
@@ -149,6 +134,28 @@ export function UserSidebar() {
           </div>
         </div>
       </motion.div>
+
+      {/* Mobile Bottom Navbar */}
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 pb-2">
+        <nav className="flex justify-around items-center p-2">
+          {menuItems.map((item, index) => {
+            const active = isActive(item.path);
+            return (
+              <Button
+                key={index}
+                variant="ghost"
+                onClick={() => navigate(item.path)}
+                className={`flex flex-col items-center justify-center h-14 flex-1 gap-1 rounded-none px-0 ${
+                  active ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                <item.icon className={`w-5 h-5 ${active ? "fill-current" : ""}`} />
+                <span className="text-[10px] font-medium">{item.label}</span>
+              </Button>
+            );
+          })}
+        </nav>
+      </div>
     </>
   );
 }
