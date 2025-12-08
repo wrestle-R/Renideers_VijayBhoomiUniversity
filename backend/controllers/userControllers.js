@@ -29,6 +29,42 @@ exports.auth = async (req, res) => {
     });
 
     await user.save();
+
+    // Auto-generate profile
+    try {
+        const emailPrefix = email.split('@')[0];
+        let username = `${emailPrefix}${Math.floor(Math.random() * 11)}`;
+        
+        // Ensure uniqueness
+        let isUnique = false;
+        let attempts = 0;
+        while (!isUnique && attempts < 5) {
+            const existing = await Profile.findOne({ username });
+            if (!existing) {
+                isUnique = true;
+            } else {
+                // Try a larger range if collision
+                username = `${emailPrefix}${Math.floor(Math.random() * 1000)}`;
+                attempts++;
+            }
+        }
+        
+        if (!isUnique) {
+             // Fallback to timestamp
+             username = `${emailPrefix}${Date.now()}`;
+        }
+
+        const profile = new Profile({
+            user_id: user._id,
+            username: username,
+            visibility: 'private'
+        });
+        await profile.save();
+        console.log('Profile auto-generated:', profile);
+    } catch (profileErr) {
+        console.error('Error auto-generating profile:', profileErr);
+    }
+
     console.log('User created:', user);
     res.status(201).json(user);
   } catch (error) {
@@ -116,6 +152,37 @@ exports.updateProfile = async (req, res) => {
     res.json(profile);
   } catch (error) {
     console.error('Update Profile Error:', error);
+    res.status(500).json({ message: 'Server Error' });
+  }
+};
+
+exports.getUserById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(userId)) {
+      return res.status(400).json({ message: 'Invalid user ID' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Get username from profile
+    const profile = await Profile.findOne({ user_id: userId });
+    const username = profile?.username || null;
+
+    res.json({
+      _id: user._id,
+      fullName: user.fullName,
+      email: user.email,
+      photoUrl: user.photoUrl,
+      createdAt: user.createdAt,
+      username: username
+    });
+  } catch (error) {
+    console.error('Get User By ID Error:', error);
     res.status(500).json({ message: 'Server Error' });
   }
 };

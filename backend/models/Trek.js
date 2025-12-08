@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+<<<<<<< HEAD
 const LocationPointSchema = new mongoose.Schema({
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },
@@ -196,5 +197,20 @@ TrekSchema.methods.complete = function() {
   this.duration = Math.floor((this.endTime - this.startTime) / 1000);
   this.calculateSummary();
 };
+=======
+const TrekSchema = new mongoose.Schema({
+  title: { type: String, required: true },
+  location: { type: String, required: true },
+  altitude: { type: Number, required: true },
+  duration: { type: String, required: true },
+  difficulty: { type: String, required: true },
+  season: { type: String, required: true },
+  description: { type: String, required: true },
+  itinerary: [{ type: String, required: true }],
+  highlights: [{ type: String, required: true }],
+  images: [{ type: String, required: true }],
+  inDepthDescription: { type: String, required: true },
+}, { timestamps: true });
+>>>>>>> 5f53eb70bf686682e9b7f26eb6c6d17354ef8e8f
 
 module.exports = mongoose.model('Trek', TrekSchema);

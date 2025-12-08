@@ -58,6 +58,29 @@ export default function Profiles() {
     setFormData(prev => ({ ...prev, [name]: value }));
   };
 
+  // Normalize website input:
+  // - leave full URLs (http/https) as-is
+  // - prepend https:// for domain-like inputs (contain a dot)
+  // - treat other inputs as local usernames and convert to site URL
+  const normalizeWebsite = (input) => {
+    if (!input) return '';
+    const v = String(input).trim();
+    if (!v) return '';
+
+    // full URL
+    if (/^https?:\/\//i.test(v)) return v;
+
+    // looks like a domain (example.com) -> add https://
+    if (/\./.test(v) && !/\s/.test(v)) {
+      return `https://${v}`;
+    }
+
+    // otherwise treat as username -> build a profile link on this site
+    const origin = import.meta.env.VITE_APP_URL || window.location?.origin || 'http://localhost:5173';
+    const clean = v.replace(/^@/, '').trim();
+    return `${origin}/${encodeURIComponent(clean)}`;
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -71,7 +94,7 @@ export default function Profiles() {
         goals: formData.goals.split(",").map(s => s.trim()).filter(Boolean),
         motivations: formData.motivations.split(",").map(s => s.trim()).filter(Boolean),
         socialLinks: {
-          website: formData.website,
+          website: normalizeWebsite(formData.website),
           instagram: formData.instagram,
           twitter: formData.twitter
         },

@@ -5,13 +5,19 @@ import { Toaster } from "react-hot-toast";
 import { LoadingPage } from "./components/LoadingPage";
 import Landing from "./pages/Landing";
 import Auth from "./pages/Auth";
-import Dashboard from "./pages/Dashboard";
+import Dashboard from "./pages/Dashboard/Dashboard";
 import Profiles from "./pages/Dashboard/Profiles";
-import Explore from "./pages/Explore";
-import Followers from "./pages/Followers";
+import Explore from "./pages/Dashboard/Explore";
+import Followers from "./pages/Dashboard/Followers";
 import UserProfile from "./pages/UserProfile";
+
 import NotFound from "./pages/NotFound";
-import Requests from "./pages/Requests";
+import Requests from "./pages/Dashboard/Requests";
+import Treks from "./pages/Treks";
+import TrekDetail from "./pages/TrekDetail";
+import Clubs from "./pages/Dashboard/Clubs";
+import ClubDetails from "./pages/Dashboard/ClubDetails";
+import { AIChatbot } from "./components/AIChatbot";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useUser();
@@ -79,6 +85,54 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
+      <Route
+        path="/treks"
+        element={
+          <ProtectedRoute>
+            <Treks />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/treks/:id"
+        element={
+          <ProtectedRoute>
+            <TrekDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/treks"
+        element={
+          <ProtectedRoute>
+            <Treks />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/treks/:id"
+        element={
+          <ProtectedRoute>
+            <TrekDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route 
+        path="/clubs" 
+        element={
+          <ProtectedRoute>
+            <Clubs />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/clubs/:id" 
+        element={
+          <ProtectedRoute>
+            <ClubDetails />
+          </ProtectedRoute>
+        } 
+      />
       <Route 
         path="/:username" 
         element={
@@ -94,14 +148,15 @@ function AppRoutes() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <UserProvider>
+    <UserProvider>
+      <ThemeProvider>
         <Router>
           <AppRoutes />
           <Toaster position="top-right" />
+          <AIChatbot />
         </Router>
-      </UserProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </UserProvider>
   );
 }
 
