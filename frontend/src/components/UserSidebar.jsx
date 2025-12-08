@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { Home, LogOut, User, Compass, Users, Mountain } from "lucide-react";
+import { Home, LogOut, User, Compass, Users, Mountain, Camera } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { ThemeToggle } from "./ThemeToggle";
@@ -29,6 +29,7 @@ export function UserSidebar() {
     { icon: Users, label: "My Friends", path: "/followers" },
     { icon: Mountain, label: "Treks", path: "/treks" },
     { icon: Users, label: "Clubs", path: "/clubs" },
+    { icon: Camera, label: "Trek Vision", path: "/trek-ai" },
   ];
 
   const isActive = (path) => location.pathname === path;
@@ -127,7 +128,10 @@ export function UserSidebar() {
 
           {/* Theme Toggle */}
           <div className="p-4 border-b border-sidebar-border">
-            <ThemeToggle showLabel={true} className="w-full justify-start text-sidebar-foreground hover:text-primary hover:bg-primary/5" />
+            <ThemeToggle
+              showLabel={true}
+              className="w-full justify-start text-sidebar-foreground hover:text-primary hover:bg-primary/5"
+            />
           </div>
 
           {/* Logout Button */}
