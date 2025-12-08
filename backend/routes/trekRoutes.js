@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Trek = require('../models/Trek');
 const User = require('../models/User');
+const trekController = require('../controllers/trekController');
 
 // Create new trek session
 router.post('/start', async (req, res) => {
@@ -301,5 +302,11 @@ router.delete('/:trekId', async (req, res) => {
     res.status(500).json({ error: 'Failed to delete trek', details: error.message });
   }
 });
+
+// GET /treks - Return all treks as JSON
+router.get('/', trekController.getAllTreks);
+
+// GET /treks/:id - Return single trek by ID
+router.get('/:id', trekController.getTrekById);
 
 module.exports = router;
