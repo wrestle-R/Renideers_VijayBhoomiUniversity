@@ -45,7 +45,8 @@ export default function ExploreScreen() {
 
     try {
       const response = await axios.get(`${apiUrl}/api/treks/user/${user.firebase_id}?status=completed`);
-      setTreks(response.data.treks || []);
+      // Support both `treks` and `activities` response shapes
+      setTreks(response.data.treks || response.data.activities || []);
     } catch (error) {
       console.error('Error fetching treks:', error);
     } finally {

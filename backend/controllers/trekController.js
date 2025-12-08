@@ -1,4 +1,4 @@
-const Trekk = require('../models/Trek');
+const Trekk = require('../models/Trekk');
 
 // Get all treks
 exports.getAllTreks = async (req, res) => {

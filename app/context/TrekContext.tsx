@@ -149,7 +149,7 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
         },
       });
 
-      const trek = response.data.trek;
+      const trek = response.data.trek || response.data.activity;
       setCurrentTrek(trek);
       setIsTracking(true);
       setIsPaused(false);
@@ -272,8 +272,8 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
             };
             
             // Send metrics snapshot to backend every 10 seconds
-            if (elapsed % 10 === 0 && currentTrek) {
-              axios.post(`${apiUrl}/api/treks/${trek._id}/metrics`, {
+                  if (elapsed % 10 === 0 && currentTrek) {
+                    axios.post(`${apiUrl}/api/treks/${trek._id}/metrics`, {
                 metrics: {
                   timestamp: new Date(),
                   steps: newMetrics.steps,
@@ -357,7 +357,7 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
         notes,
       });
 
-      const completedTrek = response.data.trek;
+      const completedTrek = response.data.trek || response.data.activity;
 
       // Reset state
       setIsTracking(false);

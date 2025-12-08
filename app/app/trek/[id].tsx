@@ -70,7 +70,8 @@ export default function TrekDetailScreen() {
     try {
       setLoading(true);
       const response = await axios.get(`${apiUrl}/api/treks/${id}`);
-      setTrek(response.data.trek);
+      // Support both `trek` and `activity` response shapes
+      setTrek(response.data.trek || response.data.activity || null);
     } catch (error) {
       console.error('Error fetching trek:', error);
     } finally {

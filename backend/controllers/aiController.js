@@ -1,5 +1,5 @@
 const Groq = require('groq-sdk');
-const Trek = require('../models/Trek');
+const Trek = require('../models/Trekk');
 const UserProfile = require('../models/UserProfiles');
 
 const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
