@@ -5,6 +5,8 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "./ui/
 import { Input } from "./ui/input";
 import { Button } from "./ui/button";
 import { Mountain, Search, Filter } from "lucide-react";
+import { AIItineraryOptimizer } from "./AIItineraryOptimizer";
+import { AIDifficultyEstimator } from "./AIDifficultyEstimator";
 
 
 const DIFFICULTY_OPTIONS = ["All", "Easy", "Moderate", "Difficult"];
@@ -111,6 +113,9 @@ const TrekList = () => {
           </select>
         </div>
       </div>
+
+      <AIItineraryOptimizer />
+      <AIDifficultyEstimator />
 
       {/* Trek Cards Grid */}
       {filtered.length === 0 ? (

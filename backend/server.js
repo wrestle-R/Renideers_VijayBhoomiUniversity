@@ -8,6 +8,7 @@ const userRoutes = require('./routes/userRoutes');
 const followerRoutes = require('./routes/followerRoutes');
 const trekRoutes = require('./routes/trekRoutes');
 const clubRoutes = require('./routes/clubRoutes');
+const aiRoutes = require('./routes/aiRoutes'); // Add this
 
 const http = require('http');
 const { Server } = require('socket.io');
@@ -124,6 +125,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/followers', followerRoutes);
 app.use('/api/treks', trekRoutes);
 app.use('/api/clubs', clubRoutes);
+app.use('/api/ai', aiRoutes); // Add this
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI)

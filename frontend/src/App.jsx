@@ -17,6 +17,7 @@ import Treks from "./pages/Treks";
 import TrekDetail from "./pages/TrekDetail";
 import Clubs from "./pages/Dashboard/Clubs";
 import ClubDetails from "./pages/Dashboard/ClubDetails";
+import { AIChatbot } from "./components/AIChatbot";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useUser();
@@ -147,14 +148,15 @@ function AppRoutes() {
 
 function App() {
   return (
-    <ThemeProvider>
-      <UserProvider>
+    <UserProvider>
+      <ThemeProvider>
         <Router>
           <AppRoutes />
           <Toaster position="top-right" />
+          <AIChatbot />
         </Router>
-      </UserProvider>
-    </ThemeProvider>
+      </ThemeProvider>
+    </UserProvider>
   );
 }
 

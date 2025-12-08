@@ -5,12 +5,15 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 import { UserSidebar } from "@/components/UserSidebar";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft } from "lucide-react";
+import { Sparkles } from "lucide-react"; // Add import
+import { AIDifficultyEstimator } from "@/components/AIDifficultyEstimator";
 
 const TrekDetail = () => {
   const { id } = useParams();
   const [trek, setTrek] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [aiSummary, setAiSummary] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,6 +31,20 @@ const TrekDetail = () => {
         setLoading(false);
       });
   }, [id]);
+
+  const generateSummary = async () => {
+    try {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ai/summary`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trekId: id })
+      });
+      const data = await res.json();
+      setAiSummary(data.summary);
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   if (loading) return (
     <SidebarProvider>
@@ -106,6 +123,23 @@ const TrekDetail = () => {
                     {trek.location}
                   </p>
                 </div>
+
+                {/* AI Summary Section */}
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 my-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <h3 className="font-semibold text-primary">AI Quick Summary</h3>
+                  </div>
+                  {aiSummary ? (
+                    <p className="text-sm italic text-muted-foreground">{aiSummary}</p>
+                  ) : (
+                    <Button variant="ghost" size="sm" onClick={generateSummary} className="text-xs h-8">
+                      Generate Summary
+                    </Button>
+                  )}
+                </div>
+
+                <AIDifficultyEstimator />
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="p-4 bg-secondary/50 rounded-lg">
