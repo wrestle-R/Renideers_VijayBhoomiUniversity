@@ -77,7 +77,7 @@ const Followers = () => {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <UserSidebar />
-        <main className="flex-1 overflow-auto p-8">
+        <main className="flex-1 overflow-auto p-8 pb-24 lg:pb-8 lg:ml-64">
           <div className="mx-auto max-w-4xl">
             <h1 className="text-3xl font-bold mb-6">My Network</h1>
       
