@@ -15,6 +15,8 @@ import NotFound from "./pages/NotFound";
 import Requests from "./pages/Dashboard/Requests";
 import Treks from "./pages/Treks";
 import TrekDetail from "./pages/TrekDetail";
+import Clubs from "./pages/Dashboard/Clubs";
+import ClubDetails from "./pages/Dashboard/ClubDetails";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useUser();
@@ -97,6 +99,38 @@ function AppRoutes() {
             <TrekDetail />
           </ProtectedRoute>
         }
+      />
+      <Route
+        path="/treks"
+        element={
+          <ProtectedRoute>
+            <Treks />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/treks/:id"
+        element={
+          <ProtectedRoute>
+            <TrekDetail />
+          </ProtectedRoute>
+        }
+      />
+      <Route 
+        path="/clubs" 
+        element={
+          <ProtectedRoute>
+            <Clubs />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/clubs/:id" 
+        element={
+          <ProtectedRoute>
+            <ClubDetails />
+          </ProtectedRoute>
+        } 
       />
       <Route 
         path="/:username" 
