@@ -1,6 +1,5 @@
 const mongoose = require('mongoose');
 
-<<<<<<< HEAD
 const LocationPointSchema = new mongoose.Schema({
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },
@@ -56,10 +55,10 @@ const TrekSchema = new mongoose.Schema({
     default: 0,
   },
   // Path tracking
-  path: [LocationPointSchema],
+  path: { type: [LocationPointSchema], default: [] },
   
   // Metrics collected during trek
-  metricsHistory: [MetricsSnapshotSchema],
+  metricsHistory: { type: [MetricsSnapshotSchema], default: [] },
   
   // Summary statistics (computed at end)
   summary: {
@@ -119,6 +118,7 @@ TrekSchema.methods.addMetricsSnapshot = function(metrics) {
 
 TrekSchema.methods.calculateSummary = function() {
   if (this.path.length < 2) return;
+  if (!Array.isArray(this.path) || this.path.length < 2) return;
   
   // Calculate total distance
   let totalDistance = 0;
@@ -159,11 +159,11 @@ TrekSchema.methods.calculateSummary = function() {
   const maxSpeed = speeds.length > 0 ? Math.max(...speeds) : 0;
   
   // Calculate steps (from last metrics)
-  const lastMetrics = this.metricsHistory[this.metricsHistory.length - 1];
+  const lastMetrics = Array.isArray(this.metricsHistory) && this.metricsHistory.length > 0 ? this.metricsHistory[this.metricsHistory.length - 1] : null;
   const totalSteps = lastMetrics ? lastMetrics.steps : 0;
   
   // Calculate heart rate stats
-  const heartRates = this.metricsHistory.filter(m => m.heartRate).map(m => m.heartRate);
+  const heartRates = Array.isArray(this.metricsHistory) ? this.metricsHistory.filter(m => m.heartRate != null).map(m => m.heartRate) : [];
   const avgHeartRate = heartRates.length > 0 ? heartRates.reduce((a, b) => a + b, 0) / heartRates.length : null;
   const maxHeartRate = heartRates.length > 0 ? Math.max(...heartRates) : null;
   
@@ -197,20 +197,5 @@ TrekSchema.methods.complete = function() {
   this.duration = Math.floor((this.endTime - this.startTime) / 1000);
   this.calculateSummary();
 };
-=======
-const TrekSchema = new mongoose.Schema({
-  title: { type: String, required: true },
-  location: { type: String, required: true },
-  altitude: { type: Number, required: true },
-  duration: { type: String, required: true },
-  difficulty: { type: String, required: true },
-  season: { type: String, required: true },
-  description: { type: String, required: true },
-  itinerary: [{ type: String, required: true }],
-  highlights: [{ type: String, required: true }],
-  images: [{ type: String, required: true }],
-  inDepthDescription: { type: String, required: true },
-}, { timestamps: true });
->>>>>>> 5f53eb70bf686682e9b7f26eb6c6d17354ef8e8f
 
-module.exports = mongoose.model('Trek', TrekSchema);
+  module.exports = mongoose.models.Trek || mongoose.model('Trek', TrekSchema);
