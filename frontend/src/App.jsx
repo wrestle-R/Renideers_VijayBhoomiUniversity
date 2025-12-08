@@ -12,6 +12,8 @@ import Followers from "./pages/Dashboard/Followers";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
 import Requests from "./pages/Dashboard/Requests";
+import Clubs from "./pages/Dashboard/Clubs";
+import ClubDetails from "./pages/Dashboard/ClubDetails";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useUser();
@@ -76,6 +78,22 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <Requests />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/clubs" 
+        element={
+          <ProtectedRoute>
+            <Clubs />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/clubs/:id" 
+        element={
+          <ProtectedRoute>
+            <ClubDetails />
           </ProtectedRoute>
         } 
       />

@@ -27,6 +27,7 @@ export function UserSidebar() {
     { icon: User, label: "Profiles", path: "/dashboard/profiles" },
     { icon: Compass, label: "Explore", path: "/explore" },
     { icon: Users, label: "My Friends", path: "/followers" },
+    { icon: Users, label: "Clubs", path: "/clubs" },
   ];
 
   const isActive = (path) => location.pathname === path;
