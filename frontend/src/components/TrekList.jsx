@@ -21,7 +21,7 @@ const TrekList = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch("http://localhost:8000/api/treks")
+    fetch(`${import.meta.env.VITE_API_URL}/api/treks`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch treks");
         return res.json();
