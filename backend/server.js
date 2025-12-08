@@ -3,8 +3,10 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
+
 const userRoutes = require('./routes/userRoutes');
 const followerRoutes = require('./routes/followerRoutes');
+const trekRoutes = require('./routes/trekRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 8000;
@@ -18,8 +20,10 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Routes
+
 app.use('/api/users', userRoutes);
 app.use('/api/followers', followerRoutes);
+app.use('/api/treks', trekRoutes);
 
 // Database Connection
 mongoose.connect(process.env.MONGO_URI)

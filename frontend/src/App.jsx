@@ -10,8 +10,11 @@ import Profiles from "./pages/Dashboard/Profiles";
 import Explore from "./pages/Dashboard/Explore";
 import Followers from "./pages/Dashboard/Followers";
 import UserProfile from "./pages/UserProfile";
+
 import NotFound from "./pages/NotFound";
 import Requests from "./pages/Dashboard/Requests";
+import Treks from "./pages/Treks";
+import TrekDetail from "./pages/TrekDetail";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useUser();
@@ -78,6 +81,22 @@ function AppRoutes() {
             <Requests />
           </ProtectedRoute>
         } 
+      />
+      <Route
+        path="/treks"
+        element={
+          <ProtectedRoute>
+            <Treks />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/treks/:id"
+        element={
+          <ProtectedRoute>
+            <TrekDetail />
+          </ProtectedRoute>
+        }
       />
       <Route 
         path="/:username" 
