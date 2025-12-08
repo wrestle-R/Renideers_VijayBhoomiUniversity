@@ -1,51 +1,33 @@
+// backend/server.js
 require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
 
-const fetch = require('node-fetch');
-
 const userRoutes = require('./routes/userRoutes');
 const followerRoutes = require('./routes/followerRoutes');
 const trekRoutes = require('./routes/trekRoutes');
 const clubRoutes = require('./routes/clubRoutes');
-const aiRoutes = require('./routes/aiRoutes'); // Add this
+const aiRoutes = require('./routes/aiRoutes');        
+const photoRoutes = require('./routes/photoRoutes');  
 
 const http = require('http');
 const { Server } = require('socket.io');
 const Message = require('./models/Message');
 const Club = require('./models/Club');
-const trekRoutes = require('./routes/trekRoutes');
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:5173",
-    methods: ["GET", "POST"],
-    credentials: true
-  }
+    origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
+    methods: ['GET', 'POST'],
+    credentials: true,
+  },
 });
 
 const PORT = process.env.PORT || 8000;
-
-const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
-const GEMINI_URL =
-  'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent';
-
-if (!GEMINI_API_KEY) {
-  console.error('CRITICAL: GEMINI_API_KEY is not set in .env file');
-  console.error('Please add GEMINI_API_KEY=your-key-here to your .env file');
-} else {
-  console.log('GEMINI_API_KEY loaded successfully');
-  console.log(`Key starts with: ${GEMINI_API_KEY.substring(0, 10)}...`);
-}
-
-function parseJsonFromGemini(text) {
-  const clean = text.replace(/```json|```/g, '').trim();
-  return JSON.parse(clean);
-}
 
 // ---------- MIDDLEWARE ----------
 app.use(
@@ -58,7 +40,7 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
 
-// Socket.io Logic
+// ---------- SOCKET.IO ----------
 io.on('connection', (socket) => {
   console.log('User connected:', socket.id);
 
@@ -73,11 +55,14 @@ io.on('connection', (socket) => {
       const newMessage = new Message({
         club: clubId,
         sender: senderId,
-        content: content
+        content,
       });
       await newMessage.save();
-      
-      const populatedMessage = await newMessage.populate('sender', 'fullName photoUrl');
+
+      const populatedMessage = await newMessage.populate(
+        'sender',
+        'fullName photoUrl'
+      );
       io.to(clubId).emit('receive_message', populatedMessage);
     } catch (error) {
       console.error('Error sending message:', error);
@@ -88,46 +73,49 @@ io.on('connection', (socket) => {
     try {
       const { messageId, userId, clubId } = data;
       const message = await Message.findById(messageId);
-      
       if (!message) return;
 
-      // Check if user already reported
+      // prevent duplicate report from same user
       const alreadyReported = message.reports.some(
-        report => report.reportedBy.toString() === userId.toString()
+        (report) => report.reportedBy.toString() === userId.toString()
       );
-      if (alreadyReported) {
-        // User already reported this message, don't allow duplicate
-        return;
-      }
+      if (alreadyReported) return;
 
       message.reports.push({ reportedBy: userId });
       await message.save();
 
-      // Count unique reporters per sender
-      const senderMessages = await Message.find({ sender: message.sender, club: clubId });
-      let totalReports = 0;
+      // Count unique reporters for this sender in this club
+      const senderMessages = await Message.find({
+        sender: message.sender,
+        club: clubId,
+      });
+
       const reportedBySet = new Set();
-      
       for (const msg of senderMessages) {
         for (const report of msg.reports) {
           reportedBySet.add(report.reportedBy.toString());
         }
       }
-      totalReports = reportedBySet.size;
+      const totalReports = reportedBySet.size;
 
-      // Check if reports >= 5
+      // Threshold: 5 unique reporters
       if (totalReports >= 5) {
         const senderId = message.sender;
-        
-        // Kick user from club
+
+        // Remove user from club
         const club = await Club.findById(clubId);
         if (club) {
-            club.members = club.members.filter(member => member.toString() !== senderId.toString());
-            await club.save();
-            
-            io.to(clubId).emit('user_kicked', { userId: senderId, message: 'User kicked due to multiple reports' });
+          club.members = club.members.filter(
+            (member) => member.toString() !== senderId.toString()
+          );
+          await club.save();
+
+          io.to(clubId).emit('user_kicked', {
+            userId: senderId,
+            message: 'User kicked due to multiple reports',
+          });
         }
-        
+
         // Delete all messages from this user in this club
         await Message.deleteMany({ sender: senderId, club: clubId });
         io.to(clubId).emit('user_messages_deleted', { userId: senderId });
@@ -142,300 +130,22 @@ io.on('connection', (socket) => {
   });
 });
 
-// Routes
+// ---------- ROUTES ----------
 app.use('/api/users', userRoutes);
 app.use('/api/followers', followerRoutes);
 app.use('/api/treks', trekRoutes);
 app.use('/api/clubs', clubRoutes);
-app.use('/api/ai', aiRoutes); // Add this
-app.use('/api/treks', trekRoutes);
 
-// ---------- GEMINI ROUTES ----------
+app.use('/api/ai', aiRoutes);
+app.use('/api', photoRoutes);
 
-// Test endpoint to verify API configuration
-app.get('/api/test-ai', async (req, res) => {
-  if (!GEMINI_API_KEY) {
-    return res.status(500).json({ 
-      status: 'error',
-      message: 'GEMINI_API_KEY not configured in .env file'
-    });
-  }
-
-  try {
-    const payload = {
-      contents: [{ parts: [{ text: 'Say "API is working" in JSON format: {"status": "working"}' }] }],
-      generationConfig: { temperature: 0, maxOutputTokens: 50 }
-    };
-
-    const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    if (!response.ok) {
-      const errText = await response.text();
-      return res.status(500).json({ 
-        status: 'error',
-        message: 'AI API returned error',
-        statusCode: response.status,
-        error: errText.substring(0, 200)
-      });
-    }
-
-    return res.json({ 
-      status: 'success',
-      message: 'AI API is configured correctly and responding'
-    });
-  } catch (error) {
-    return res.status(500).json({ 
-      status: 'error',
-      message: error.message
-    });
-  }
-});
-
-app.post('/api/identify-species', async (req, res) => {
-  try {
-    console.log('🔍 Identify species request received');
-    
-    if (!GEMINI_API_KEY) {
-      console.error('AI API key not configured');
-      return res.status(500).json({ 
-        error: 'AI service not configured',
-        species: 'unknown',
-        category: 'unknown',
-        confidence: 'low',
-        isDangerous: false,
-        dangerLevel: 'none'
-      });
-    }
-
-    const { base64Image } = req.body;
-    if (!base64Image) {
-      console.error('No base64Image in request body');
-      return res.status(400).json({ error: 'base64Image is required' });
-    }
-
-    console.log('Sending request to Gemini API...');
-
-    const payload = {
-      contents: [
-        {
-          parts: [
-            {
-              text: `You are an expert wildlife and plant identification assistant for trekkers and hikers.
-
-Analyze this image carefully and identify any visible plant, animal, insect, bird, reptile, or landmark.
-
-Respond ONLY with a valid JSON object (no markdown, no backticks, no additional text):
-
-{
-  "species": "Common Name (Scientific Name)",
-  "category": "plant" or "animal" or "insect" or "reptile" or "bird" or "mammal" or "unknown",
-  "confidence": "high" or "medium" or "low",
-  "isDangerous": true or false,
-  "dangerLevel": "high" or "medium" or "low" or "none"
-}
-
-Be specific with the species name. If you can identify it, provide both common and scientific names.
-If you cannot identify with confidence, set species to "unknown" and confidence to "low".
-For dangerous species, set isDangerous to true and specify the danger level.`,
-            },
-            {
-              inline_data: {
-                mime_type: 'image/jpeg',
-                data: base64Image,
-              },
-            },
-          ],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.2,
-        maxOutputTokens: 500,
-      },
-    };
-
-    const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    console.log('Gemini response status:', response.status);
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('AI API error:', response.status);
-      
-      try {
-        const errorJson = JSON.parse(errText);
-        console.error('Error details:', JSON.stringify(errorJson, null, 2));
-      } catch (e) {
-        console.error('Raw error text:', errText.substring(0, 500));
-      }
-      
-      return res.status(500).json({ 
-        error: 'AI service temporarily unavailable',
-        species: 'unknown',
-        category: 'unknown',
-        confidence: 'low',
-        isDangerous: false,
-        dangerLevel: 'none',
-        debugInfo: {
-          statusCode: response.status,
-          statusText: response.statusText
-        }
-      });
-    }
-
-    const data = await response.json();
-    console.log('Gemini response received');
-    
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    
-    if (!text) {
-      console.error('No text in Gemini response');
-      return res.status(500).json({ 
-        error: 'No response from AI',
-        species: 'unknown',
-        category: 'unknown',
-        confidence: 'low',
-        isDangerous: false,
-        dangerLevel: 'none'
-      });
-    }
-
-    console.log('Raw Gemini response:', text);
-
-    try {
-      const json = parseJsonFromGemini(text);
-      console.log('Parsed JSON:', json);
-      return res.json(json);
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError);
-      console.error('Raw text was:', text);
-      return res.status(500).json({ 
-        error: 'Failed to parse AI response',
-        species: 'unknown',
-        category: 'unknown',
-        confidence: 'low',
-        isDangerous: false,
-        dangerLevel: 'none'
-      });
-    }
-  } catch (err) {
-    console.error('identify-species route error:', err);
-    return res.status(500).json({ 
-      error: 'Failed to identify species', 
-      details: err.message 
-    });
-  }
-});
-
-app.post('/api/species-details', async (req, res) => {
-  try {
-    console.log('Species details request received');
-    
-    if (!GEMINI_API_KEY) {
-      console.error('AI API key not configured');
-      return res.status(500).json({ error: 'AI service not configured' });
-    }
-
-    const { speciesName } = req.body;
-    if (!speciesName) {
-      console.error('No speciesName in request body');
-      return res.status(400).json({ error: 'speciesName is required' });
-    }
-
-    console.log('Getting details for:', speciesName);
-
-    const payload = {
-      contents: [
-        {
-          parts: [
-            {
-              text: `Provide detailed, accurate information about this species: "${speciesName}"
-
-Respond ONLY with a valid JSON object (no markdown, no backticks, no additional text):
-
-{
-  "scientificName": "scientific name if known",
-  "commonNames": ["array of common names in different regions"],
-  "description": "detailed physical description and key identifying features",
-  "habitat": "typical habitat and environmental preferences",
-  "distribution": "geographical distribution, especially in India and South Asia",
-  "behavior": "behavioral characteristics and activity patterns",
-  "diet": "diet for animals OR growing conditions for plants",
-  "conservation": "conservation status (IUCN if applicable) and threats",
-  "dangerInfo": "detailed safety information - level of danger, what makes it dangerous, symptoms of envenomation/poisoning",
-  "interestingFacts": ["3-5 interesting and educational facts"],
-  "safetyTips": ["3-5 specific safety tips for trekkers encountering this species"],
-  "isThreatened": true or false,
-  "isVenomous": true or false,
-  "isPoisonous": true or false
-}
-
-Be accurate and thorough. If certain information is not applicable, use empty strings or arrays.`,
-            },
-          ],
-        },
-      ],
-      generationConfig: {
-        temperature: 0.3,
-        maxOutputTokens: 2000,
-      },
-    };
-
-    const response = await fetch(`${GEMINI_URL}?key=${GEMINI_API_KEY}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload),
-    });
-
-    console.log('Gemini response status:', response.status);
-
-    if (!response.ok) {
-      const errText = await response.text();
-      console.error('AI API error:', response.status, errText);
-      return res.status(500).json({ 
-        error: 'AI service temporarily unavailable',
-        description: 'Unable to retrieve species information'
-      });
-    }
-
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text || '{}';
-
-    console.log('Raw Gemini response (truncated):', text.substring(0, 200));
-
-    try {
-      const json = parseJsonFromGemini(text);
-      console.log('Species details parsed successfully');
-      return res.json(json);
-    } catch (parseError) {
-      console.error('JSON parse error:', parseError);
-      return res.status(500).json({ 
-        error: 'Failed to parse AI response',
-        description: 'Unable to retrieve species information'
-      });
-    }
-  } catch (err) {
-    console.error('species-details route error:', err);
-    return res.status(500).json({ 
-      error: 'Failed to get species details', 
-      details: err.message 
-    });
-  }
-});
-
+// ---------- DB & SERVER ----------
 mongoose
   .connect(process.env.MONGO_URI)
-  .then(() => console.log('✅ MongoDB Connected'))
+  .then(() => console.log('MongoDB Connected'))
   .catch((err) => console.error('MongoDB Connection Error:', err));
 
-app.listen(PORT, () => {
+server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`API endpoints available:`);
   console.log(`   - GET  http://localhost:${PORT}/api/test-ai`);
