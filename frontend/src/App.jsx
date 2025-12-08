@@ -12,6 +12,7 @@ import Followers from "./pages/Dashboard/Followers";
 import UserProfile from "./pages/UserProfile";
 import NotFound from "./pages/NotFound";
 import Requests from "./pages/Dashboard/Requests";
+import TrekPhotoRecognition from "./pages/Dashboard/TrekPhotoRecognition";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useUser();
@@ -30,6 +31,7 @@ const PublicRoute = ({ children }) => {
 function AppRoutes() {
   return (
     <Routes>
+
       <Route path="/" element={<Landing />} />
       <Route 
         path="/auth" 
@@ -40,6 +42,14 @@ function AppRoutes() {
         } 
       />
       <Route 
+        path="/trek-ai" 
+        element={
+          <ProtectedRoute>
+            <TrekPhotoRecognition />
+          </ProtectedRoute>
+        } 
+      />
+        <Route 
         path="/dashboard" 
         element={
           <ProtectedRoute>
