@@ -1,112 +1,261 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
-
-import { Collapsible } from '@/components/ui/collapsible';
-import { ExternalLink } from '@/components/external-link';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
+import React, { useEffect, useState } from 'react';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, RefreshControl, ActivityIndicator } from 'react-native';
 import { ThemedView } from '@/components/themed-view';
+import { ThemedText } from '@/components/themed-text';
+import { useThemeColor } from '@/hooks/use-theme-color';
+import { useAuth } from '@/context/AuthContext';
 import { IconSymbol } from '@/components/ui/icon-symbol';
-import { Fonts } from '@/constants/theme';
+import axios from 'axios';
+import Constants from 'expo-constants';
+import { useRouter } from 'expo-router';
 
-export default function TabTwoScreen() {
-  return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#D0D0D0', dark: '#353636' }}
-      headerImage={
-        <IconSymbol
-          size={310}
-          color="#808080"
-          name="chevron.left.forwardslash.chevron.right"
-          style={styles.headerImage}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText
-          type="title"
-          style={{
-            fontFamily: Fonts.rounded,
-          }}>
-          Explore
-        </ThemedText>
+type TrekSummary = {
+  _id: string;
+  title: string;
+  status: string;
+  startTime: string;
+  endTime?: string;
+  duration: number;
+  summary: {
+    totalDistance: number;
+    totalSteps: number;
+    totalElevationGain: number;
+    caloriesBurned: number;
+  };
+};
+
+export default function ExploreScreen() {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [treks, setTreks] = useState<TrekSummary[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const primaryColor = useThemeColor({}, 'primary');
+  const cardColor = useThemeColor({}, 'card');
+  const foregroundColor = useThemeColor({}, 'foreground');
+  const mutedColor = useThemeColor({}, 'muted');
+  const mutedForeground = useThemeColor({}, 'mutedForeground');
+  const borderColor = useThemeColor({}, 'border');
+
+  const apiUrl = Constants.expoConfig?.extra?.API_URL || 'http://localhost:8000';
+
+  const fetchTreks = async () => {
+    if (!user) return;
+
+    try {
+      const response = await axios.get(`${apiUrl}/api/treks/user/${user.firebase_id}?status=completed`);
+      setTreks(response.data.treks || []);
+    } catch (error) {
+      console.error('Error fetching treks:', error);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTreks();
+  }, [user]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchTreks();
+  };
+
+  const formatDuration = (seconds: number) => {
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    if (hrs > 0) return `${hrs}h ${mins}m`;
+    return `${mins}m`;
+  };
+
+  const formatDistance = (meters: number) => {
+    if (meters < 1000) return `${meters.toFixed(0)}m`;
+    return `${(meters / 1000).toFixed(2)}km`;
+  };
+
+  const formatDate = (dateString: string) => {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+    });
+  };
+
+  const renderTrekCard = ({ item }: { item: TrekSummary }) => (
+    <TouchableOpacity
+      style={[styles.trekCard, { backgroundColor: cardColor as string, borderColor: borderColor as string }]}
+      onPress={() => {
+        router.push(`/trek/${item._id}`);
+      }}
+    >
+      <View style={styles.trekHeader}>
+        <View style={styles.trekTitleContainer}>
+          <ThemedText type="defaultSemiBold" style={styles.trekTitle}>
+            {item.title}
+          </ThemedText>
+          <Text style={[styles.trekDate, { color: mutedForeground as string }]}>
+            {formatDate(item.startTime)}
+          </Text>
+        </View>
+        <IconSymbol name="chevron.right" size={20} color={mutedForeground as string} />
+      </View>
+
+      <View style={styles.statsGrid}>
+        <View style={styles.statItem}>
+          <IconSymbol name="house.fill" size={16} color={primaryColor as string} />
+          <Text style={[styles.statValue, { color: foregroundColor as string }]}>
+            {formatDistance(item.summary?.totalDistance || 0)}
+          </Text>
+          <Text style={[styles.statLabel, { color: mutedForeground as string }]}>Distance</Text>
+        </View>
+
+        <View style={styles.statItem}>
+          <IconSymbol name="house.fill" size={16} color={primaryColor as string} />
+          <Text style={[styles.statValue, { color: foregroundColor as string }]}>
+            {formatDuration(item.duration || 0)}
+          </Text>
+          <Text style={[styles.statLabel, { color: mutedForeground as string }]}>Duration</Text>
+        </View>
+
+        <View style={styles.statItem}>
+          <IconSymbol name="house.fill" size={16} color={primaryColor as string} />
+          <Text style={[styles.statValue, { color: foregroundColor as string }]}>
+            {item.summary?.totalSteps || 0}
+          </Text>
+          <Text style={[styles.statLabel, { color: mutedForeground as string }]}>Steps</Text>
+        </View>
+
+        <View style={styles.statItem}>
+          <IconSymbol name="house.fill" size={16} color={primaryColor as string} />
+          <Text style={[styles.statValue, { color: foregroundColor as string }]}>
+            {item.summary?.totalElevationGain?.toFixed(0) || 0}m
+          </Text>
+          <Text style={[styles.statLabel, { color: mutedForeground as string }]}>Elevation</Text>
+        </View>
+      </View>
+    </TouchableOpacity>
+  );
+
+  if (loading) {
+    return (
+      <ThemedView style={styles.centerContainer}>
+        <ActivityIndicator size="large" color={primaryColor as string} />
       </ThemedView>
-      <ThemedText>This app includes example code to help you get started.</ThemedText>
-      <Collapsible title="File-based routing">
-        <ThemedText>
-          This app has two screens:{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">app/(tabs)/explore.tsx</ThemedText>
+    );
+  }
+
+  return (
+    <ThemedView style={styles.container}>
+      <View style={styles.header}>
+        <ThemedText type="title">Trek History</ThemedText>
+        <ThemedText style={{ color: mutedForeground as string }}>
+          {treks.length} {treks.length === 1 ? 'trek' : 'treks'} completed
         </ThemedText>
-        <ThemedText>
-          The layout file in <ThemedText type="defaultSemiBold">app/(tabs)/_layout.tsx</ThemedText>{' '}
-          sets up the tab navigator.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/router/introduction">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Android, iOS, and web support">
-        <ThemedText>
-          You can open this project on Android, iOS, and the web. To open the web version, press{' '}
-          <ThemedText type="defaultSemiBold">w</ThemedText> in the terminal running this project.
-        </ThemedText>
-      </Collapsible>
-      <Collapsible title="Images">
-        <ThemedText>
-          For static images, you can use the <ThemedText type="defaultSemiBold">@2x</ThemedText> and{' '}
-          <ThemedText type="defaultSemiBold">@3x</ThemedText> suffixes to provide files for
-          different screen densities
-        </ThemedText>
-        <Image
-          source={require('@/assets/images/react-logo.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center' }}
+      </View>
+
+      {treks.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <IconSymbol name="map.fill" size={64} color={mutedForeground as string} />
+          <ThemedText type="subtitle" style={styles.emptyTitle}>
+            No treks yet
+          </ThemedText>
+          <Text style={[styles.emptyText, { color: mutedForeground as string }]}>
+            Start tracking your first trek from the Map tab
+          </Text>
+        </View>
+      ) : (
+        <FlatList
+          data={treks}
+          renderItem={renderTrekCard}
+          keyExtractor={(item) => item._id}
+          contentContainerStyle={styles.listContainer}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={primaryColor as string}
+            />
+          }
         />
-        <ExternalLink href="https://reactnative.dev/docs/images">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Light and dark mode components">
-        <ThemedText>
-          This template has light and dark mode support. The{' '}
-          <ThemedText type="defaultSemiBold">useColorScheme()</ThemedText> hook lets you inspect
-          what the user&apos;s current color scheme is, and so you can adjust UI colors accordingly.
-        </ThemedText>
-        <ExternalLink href="https://docs.expo.dev/develop/user-interface/color-themes/">
-          <ThemedText type="link">Learn more</ThemedText>
-        </ExternalLink>
-      </Collapsible>
-      <Collapsible title="Animations">
-        <ThemedText>
-          This template includes an example of an animated component. The{' '}
-          <ThemedText type="defaultSemiBold">components/HelloWave.tsx</ThemedText> component uses
-          the powerful{' '}
-          <ThemedText type="defaultSemiBold" style={{ fontFamily: Fonts.mono }}>
-            react-native-reanimated
-          </ThemedText>{' '}
-          library to create a waving hand animation.
-        </ThemedText>
-        {Platform.select({
-          ios: (
-            <ThemedText>
-              The <ThemedText type="defaultSemiBold">components/ParallaxScrollView.tsx</ThemedText>{' '}
-              component provides a parallax effect for the header image.
-            </ThemedText>
-          ),
-        })}
-      </Collapsible>
-    </ParallaxScrollView>
+      )}
+    </ThemedView>
   );
 }
 
 const styles = StyleSheet.create({
-  headerImage: {
-    color: '#808080',
-    bottom: -90,
-    left: -35,
-    position: 'absolute',
+  container: {
+    flex: 1,
   },
-  titleContainer: {
+  centerContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  header: {
+    padding: 20,
+    paddingTop: 60,
+    gap: 4,
+  },
+  listContainer: {
+    padding: 16,
+    gap: 16,
+  },
+  trekCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    gap: 16,
+  },
+  trekHeader: {
     flexDirection: 'row',
-    gap: 8,
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  trekTitleContainer: {
+    flex: 1,
+    gap: 4,
+  },
+  trekTitle: {
+    fontSize: 18,
+  },
+  trekDate: {
+    fontSize: 13,
+  },
+  statsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 16,
+  },
+  statItem: {
+    alignItems: 'center',
+    minWidth: 70,
+    gap: 4,
+  },
+  statValue: {
+    fontSize: 16,
+    fontWeight: '700',
+    marginTop: 4,
+  },
+  statLabel: {
+    fontSize: 11,
+    fontWeight: '500',
+  },
+  emptyContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingHorizontal: 40,
+    gap: 12,
+  },
+  emptyTitle: {
+    marginTop: 16,
+  },
+  emptyText: {
+    textAlign: 'center',
+    fontSize: 14,
+    lineHeight: 20,
   },
 });
