@@ -22,7 +22,6 @@ export function UserSidebar() {
 
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/dashboard" },
-    { icon: User, label: "Profiles", path: "/dashboard/profiles" },
     { icon: Compass, label: "Explore", path: "/explore" },
     { icon: Camera, label: "Trek AI", path: "/trek-ai" },
     { icon: Mountain, label: "Treks", path: "/treks" },
@@ -40,9 +39,12 @@ export function UserSidebar() {
         animate={{ x: 0 }}
       >
         {/* Header */}
-        <div className="p-4 border-b border-sidebar-border flex items-center gap-3">
-          <img src="/logo.png" alt="Trekky" className="h-8 w-auto flex-shrink-0" />
-          <span className="font-semibold text-lg">Trekky</span>
+        <div className="p-4 border-b border-sidebar-border flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <img src="/logo.png" alt="Trekky" className="h-8 w-auto flex-shrink-0" />
+            <span className="font-semibold text-lg">Trekky</span>
+          </div>
+          <ThemeToggle className="text-sidebar-foreground hover:text-primary hover:bg-primary/5" />
         </div>
 
         {/* Navigation */}
@@ -109,11 +111,6 @@ export function UserSidebar() {
               </div>
             </div>
           )}
-
-          {/* Theme Toggle */}
-          <div className="p-4 border-b border-sidebar-border">
-            <ThemeToggle showLabel={true} className="w-full justify-start text-sidebar-foreground hover:text-primary hover:bg-primary/5" />
-          </div>
 
           {/* Logout Button */}
           <div className="p-4">
