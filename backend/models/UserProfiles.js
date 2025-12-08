@@ -60,6 +60,4 @@ const ProfileSchema = new mongoose.Schema({
     timestamps: true,
 });
 
-ProfileSchema.index({ user_id: 1 }, { unique: true });
-
 module.exports = mongoose.models.Profile || mongoose.model('Profile', ProfileSchema);

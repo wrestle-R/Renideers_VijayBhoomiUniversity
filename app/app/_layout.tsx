@@ -7,6 +7,7 @@ import { useEffect } from 'react';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 import { ThemeProvider as AppThemeProvider } from '@/context/ThemeProvider';
 import { AuthProvider, useAuth } from '@/context/AuthContext';
+import { TrekProvider } from '@/context/TrekContext';
 
 export const unstable_settings = {
   anchor: '(tabs)',
@@ -49,7 +50,9 @@ export default function RootLayout() {
   return (
     <AppThemeProvider>
       <AuthProvider>
-        <RootLayoutNav />
+        <TrekProvider>
+          <RootLayoutNav />
+        </TrekProvider>
       </AuthProvider>
     </AppThemeProvider>
   );
