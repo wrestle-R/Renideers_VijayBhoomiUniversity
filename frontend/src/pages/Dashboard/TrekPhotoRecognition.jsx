@@ -160,15 +160,17 @@ const TrekPhotoRecognition = () => {
         const detailedInfo = await getSpeciesDetails(identificationResult.species);
         console.log('[analyzeImage] Details received:', detailedInfo);
         
-        setResults({
+        const resultsData = {
           species: identificationResult.species,
           category: identificationResult.category,
           confidence: identificationResult.confidence,
+          confidenceScore: identificationResult.confidenceScore,
           isDangerous: identificationResult.isDangerous,
           dangerLevel: identificationResult.dangerLevel,
           details: detailedInfo,
-        });
-        console.log('[analyzeImage] Results set successfully');
+        };
+        setResults(resultsData);
+        console.log('[analyzeImage] ✅ Results set successfully:', resultsData);
       } else {
         console.warn('[analyzeImage] No valid species identified:', identificationResult);
         setError('Could not identify any species in the image. Please try a clearer photo.');
@@ -227,10 +229,11 @@ const TrekPhotoRecognition = () => {
       }
 
       const result = await response.json();
-      console.log('[identifySpeciesWithClaude] Identification result:', {
+      console.log('[identifySpeciesWithClaude] ✅ Identification successful:', {
         species: result.species,
         category: result.category,
         confidence: result.confidence,
+        confidenceScore: result.confidenceScore,
         isDangerous: result.isDangerous,
         dangerLevel: result.dangerLevel
       });
@@ -277,11 +280,21 @@ const TrekPhotoRecognition = () => {
       }
 
       const details = await response.json();
-      console.log('[getSpeciesDetails] Details received successfully:', {
-        hasScientificName: !!details.scientificName,
+      console.log('[getSpeciesDetails] ✅ Details received successfully');
+      console.log('[getSpeciesDetails] Full details object:', details);
+      console.log('[getSpeciesDetails] Details summary:', {
+        scientificName: details.scientificName || 'N/A',
+        commonNames: details.commonNames?.length || 0,
         hasDescription: !!details.description,
         hasHabitat: !!details.habitat,
-        detailsKeys: Object.keys(details)
+        hasDistribution: !!details.distribution,
+        hasBehavior: !!details.behavior,
+        hasDiet: !!details.diet,
+        interestingFacts: details.interestingFacts?.length || 0,
+        safetyTips: details.safetyTips?.length || 0,
+        isThreatened: details.isThreatened || false,
+        isVenomous: details.isVenomous || false,
+        isPoisonous: details.isPoisonous || false
       });
       return details;
     } catch (error) {
@@ -398,7 +411,7 @@ const TrekPhotoRecognition = () => {
 
         {useCamera && (
           <div className="flex flex-col gap-4">
-            <div className="bg-black rounded-2xl overflow-hidden shadow-2xl relative aspect-[3/4] md:aspect-video">
+            <div className="bg-black rounded-2xl overflow-hidden shadow-2xl relative aspect-3/4 md:aspect-video">
               <video
                 ref={videoRef}
                 autoPlay
@@ -459,49 +472,58 @@ const TrekPhotoRecognition = () => {
                 <div className="bg-blue-50 dark:bg-blue-900/20 rounded-xl p-3 border border-blue-200 dark:border-blue-800 text-left">
                   <p className="text-sm text-blue-700 dark:text-blue-300 m-0 flex items-center gap-2">
                     <Info size={16} />
-                    Confidence Score: {Math.round(results.confidence * 100)}% match
+                    Confidence Score: {Math.round((results.confidenceScore || 0) * 100)}% match
                   </p>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="bg-card rounded-xl p-5 shadow-sm border border-border">
-                    <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                       <Globe size={16} className="text-primary" />
                       Habitat & Distribution
                     </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed m-0">
-                      {results.details?.habitat || 'Information not available.'}
-                    </p>
+                    <div className="space-y-3">
+                      {results.details?.habitat && (
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase mb-1">Habitat</p>
+                          <p className="text-sm text-foreground leading-relaxed">{results.details.habitat}</p>
+                        </div>
+                      )}
+                      {results.details?.distribution && (
+                        <div>
+                          <p className="text-xs font-medium text-muted-foreground uppercase mb-1">Distribution</p>
+                          <p className="text-sm text-foreground leading-relaxed">{results.details.distribution}</p>
+                        </div>
+                      )}
+                      {!results.details?.habitat && !results.details?.distribution && (
+                        <p className="text-sm text-muted-foreground">Information not available.</p>
+                      )}
+                    </div>
                   </div>
 
                   <div className={`bg-card rounded-xl p-5 shadow-sm border border-border ${results.isDangerous ? 'border-l-4 border-l-orange-500' : ''}`}>
-                    <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
+                    <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
                       <AlertTriangle size={16} className={results.isDangerous ? "text-orange-500" : "text-primary"} />
                       Safety & Precautions
                     </h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed m-0">
-                      {results.details?.safetyNotes || 'No specific safety warnings.'}
-                    </p>
+                    {results.details?.safetyTips && results.details.safetyTips.length > 0 ? (
+                      <ul className="space-y-2">
+                        {results.details.safetyTips.map((tip, index) => (
+                          <li key={index} className="text-sm text-foreground flex gap-2">
+                            <span className="text-primary mt-1">•</span>
+                            <span>{tip}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">No specific safety warnings.</p>
+                    )}
                     {results.isDangerous && (
-                      <div className="mt-2 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
-                        <strong>Warning:</strong> Exercise caution. Keep a safe distance.
+                      <div className="mt-3 p-3 rounded-lg bg-red-50 border border-red-200 text-red-800 text-sm dark:bg-red-900/20 dark:border-red-800 dark:text-red-300">
+                        <strong>⚠️ Warning:</strong> Exercise caution. Keep a safe distance.
                       </div>
                     )}
                   </div>
-                </div>
-
-                <div className="bg-card rounded-xl p-5 shadow-sm border border-border">
-                  <h3 className="text-sm font-semibold text-foreground mb-2 flex items-center gap-2">
-                    <BookOpen size={16} className="text-primary" />
-                    Key Facts
-                  </h3>
-                  <ul className="list-disc pl-4 space-y-1">
-                    {results.details?.facts?.map((fact, index) => (
-                      <li key={index} className="text-sm text-muted-foreground leading-relaxed">
-                        {fact}
-                      </li>
-                    )) || <li className="text-sm text-muted-foreground">No facts available.</li>}
-                  </ul>
                 </div>
 
                 <button 
