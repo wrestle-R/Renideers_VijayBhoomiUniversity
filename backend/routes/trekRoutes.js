@@ -307,6 +307,6 @@ router.delete('/:trekId', async (req, res) => {
 router.get('/', trekController.getAllTreks);
 
 // GET /treks/:id - Return single trek by ID
-router.get('/:id', trekController.getTrekById);
+router.get('/normal/:id', trekController.getTrekById);
 
 module.exports = router;
