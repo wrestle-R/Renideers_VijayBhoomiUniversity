@@ -8,7 +8,6 @@
 
 </div>
 
----
 
 ## Technology Stack
 
@@ -37,20 +36,11 @@ Renideers_VijayBhoomiUniversity/
 
 ### Key Features
 
-- Trek & experiment creation, scheduling and management
-- Participant-facing experiment runner with precise timing
-- Secure user authentication via Firebase
-- Media uploads (images/audio) with Cloudinary integration
-- Admin dashboard for analytics, participants and content
 
 ## Quick Start
 
 ### Prerequisites
 
-- Node.js v18+ and npm
-- MongoDB (local or Atlas)
-- Firebase project (Auth / service account)
-- Optional: Cloudinary for media uploads
 
 ### Backend
 
@@ -61,20 +51,23 @@ cd backend
 npm install
 ```
 
-2. Create a `.env` file in `backend/` with the following variables (example):
+2. Create a `.env` file in `backend/` with the following variables (example). These are taken from the repository's current `backend/.env` — use these exact names when you create your `.env`:
 
 ```env
+# Required (based on current backend/.env)
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/<dbname>?retryWrites=true&w=majority
 PORT=8000
-MONGO_URL=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-FIREBASE_PROJECT_ID=your_firebase_project_id
-FIREBASE_CLIENT_EMAIL=your_firebase_client_email
-FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
-TWILIO_ACCOUNT_SID=your_twilio_sid
-TWILIO_AUTH_TOKEN=your_twilio_auth_token
-CLOUDINARY_CLOUD_NAME=your_cloud_name
-CLOUDINARY_API_KEY=your_cloudinary_key
-CLOUDINARY_API_SECRET=your_cloudinary_secret
+GEMINI_API_KEY=your_gemini_api_key_here
+GROQ_API_KEY=your_groq_api_key_here
+FRONTEND_ORIGIN=http://localhost:5173
+
+# Optional / service credentials (if used in your setup)
+# CLOUDINARY_CLOUD_NAME=your_cloud_name
+# CLOUDINARY_API_KEY=your_cloudinary_api_key
+# CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+# FIREBASE_PROJECT_ID=your_firebase_project_id
+# FIREBASE_CLIENT_EMAIL=your_firebase_client_email
+# FIREBASE_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
 ```
 
 3. Start the backend server (development):
@@ -84,6 +77,23 @@ npm run dev
 ```
 
 Entry point: `backend/server.js`
+
+### Frontend environment
+
+The frontend uses Vite env variables (prefixed with `VITE_`). Create `frontend/.env` with the following keys (the repository's `frontend/.env` contains these names):
+
+```env
+VITE_API_URL=http://localhost:8000
+VITE_FIREBASE_API_KEY=your_firebase_api_key
+VITE_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+VITE_FIREBASE_PROJECT_ID=your_firebase_project_id
+VITE_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+VITE_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+VITE_FIREBASE_APP_ID=your_firebase_app_id
+VITE_FIREBASE_MEASUREMENT_ID=your_firebase_measurement_id
+```
+
+Keep the `VITE_` prefix — Vite will expose these to the client at build time.
 
 ### Frontend (Admin / Dashboard)
 
@@ -109,14 +119,26 @@ npm run start
 
 2. Use Expo Go or a simulator to open the app.
 
+Environment (Expo)
+
+The Expo app reads public environment values from `process.env` keys referenced in `app/app.config.js` (these are usually provided as `EXPO_PUBLIC_` prefixed variables). Create a `.env` (or set EAS/App config) with the following keys if you run the app locally:
+
+```env
+EXPO_PUBLIC_FIREBASE_API_KEY=your_firebase_api_key
+EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN=your_firebase_auth_domain
+EXPO_PUBLIC_FIREBASE_PROJECT_ID=your_firebase_project_id
+EXPO_PUBLIC_FIREBASE_STORAGE_BUCKET=your_firebase_storage_bucket
+EXPO_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_firebase_messaging_sender_id
+EXPO_PUBLIC_FIREBASE_APP_ID=your_firebase_app_id
+EXPO_PUBLIC_FIREBASE_MEASUREMENT_ID=your_firebase_measurement_id
+EXPO_PUBLIC_GOOGLE_CLIENT_ID=your_google_client_id
+EXPO_PUBLIC_API_URL=http://localhost:8000
+```
+
+Note: `EXPO_PUBLIC_` prefixed variables are exposed to the client and are safe to use for public Firebase config values; keep any server-side secrets out of these variables. For production builds consider using EAS secrets or CI environment variables.
+
 ## Project Structure (notable files)
 
-- `backend/server.js` — Express app, middleware and route mounting
-- `backend/controllers/` — controllers for treks, users, participants
-- `backend/models/` — Mongoose models (Trek, User, Participant, etc.)
-- `backend/routes/` — grouped API routes
-- `frontend/src/` — React pages and UI components
-- `app/` — Expo project (screens, navigation, assets)
 
 ## API Examples
 
@@ -132,26 +154,25 @@ POST /api/voice-responses
 
 ## Contributors & Team
 
-This project contributors (from git history):
+This project contributors:
 
 - Russel Daniel Paul (`wrestle-R`) — russeldanielpaul@gmail.com
 - Hike-12 (`Hike-12`) — 160257872+Hike-12@users.noreply.github.com
 - Gavin Soares (`gavin soares`) — gavinsoares200510@gmail.com
 - Shravyacs05 (`shravyacs05`) — 160271791+shravyacs05@users.noreply.github.com
 
-If you'd like a different display name or to add more people, update this file or open a PR.
-
-## Next Steps (suggested)
-
-- Add `backend/.env.example` and `frontend/.env.example` with placeholders (safe to commit)
-- Add API documentation (OpenAPI / Swagger) under `backend/docs`
-- Add CI (GitHub Actions) to run lint/tests on PRs
-
-## Support
+Support
 
 Open an issue or contact the maintainers via GitHub for support.
 
----
+
+<div align="center">
+  [![GitHub Stars](https://img.shields.io/github/stars/wrestle-R/Renideers_VijayBhoomiUniversity?style=social&cacheSeconds=60)](https://github.com/wrestle-R/Renideers_VijayBhoomiUniversity/stargazers)
+  [![GitHub Forks](https://img.shields.io/github/forks/wrestle-R/Renideers_VijayBhoomiUniversity?style=social)](https://github.com/wrestle-R/Renideers_VijayBhoomiUniversity/network/members)
+</div>
 
 Built with ♥ by the project contributors.
+
+
+````
 
