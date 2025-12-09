@@ -1,7 +1,7 @@
 
 <div align="center">
 
-# Renideers — VijayBhoomi University
+# Trekky — VijayBhoomi University
 
 [![Platform](https://img.shields.io/badge/Trek%20Platform-Online-6c5ce7?style=for-the-badge&logo=github&logoColor=white)](https://github.com/wrestle-R/Renideers_VijayBhoomiUniversity)
 [![Project](https://img.shields.io/badge/University-2025-4ecdc4?style=for-the-badge&logo=university&logoColor=white)]()
