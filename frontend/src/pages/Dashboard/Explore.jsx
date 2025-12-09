@@ -5,14 +5,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Search, CheckCircle, XCircle, Compass, Users, UserCheck, Clock } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Search, CheckCircle, XCircle, Compass, Users, UserCheck, Clock, Send } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { UserSidebar } from '@/components/UserSidebar';
 
 const Explore = () => {
   const { user } = useUser();
-  const [activeTab, setActiveTab] = useState('discover'); // discover, following, followers, requests
+  const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState('discover'); // discover, following, followers, requests, sent
   const [query, setQuery] = useState('');
   const [results, setResults] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -26,6 +27,7 @@ const Explore = () => {
       if (activeTab === 'followers') endpoint = '/api/followers/followers';
       if (activeTab === 'following') endpoint = '/api/followers/following';
       if (activeTab === 'requests') endpoint = '/api/followers/pending';
+      if (activeTab === 'sent') endpoint = '/api/followers/sent';
 
       if (endpoint) {
         const res = await axios.get(`${import.meta.env.VITE_API_URL}${endpoint}`, {
@@ -173,6 +175,7 @@ const Explore = () => {
     { id: 'following', label: 'Following', icon: UserCheck },
     { id: 'followers', label: 'Followers', icon: Users },
     { id: 'requests', label: 'Requests', icon: Clock },
+    { id: 'sent', label: 'Sent', icon: Send },
   ];
 
   return (
@@ -240,56 +243,74 @@ const Explore = () => {
                 </Card>
               ) : (
                 results.map((u) => (
-                  <Card key={u._id} className="flex items-center justify-between p-4">
-                    <div className="flex items-center gap-4">
-                      <Avatar>
-                        <AvatarImage src={u.photoUrl} />
-                        <AvatarFallback>{u.fullName?.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <Link to={`/${u.username || u._id}`} className="font-semibold hover:underline text-foreground">
-                          {u.fullName}
-                        </Link>
-                        <p className="text-sm text-muted-foreground">{u.email}</p>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      {activeTab === 'discover' && (
-                        <Button 
-                          variant={u.followStatus === 'accepted' ? "secondary" : "default"}
-                          onClick={() => u.followStatus === 'accepted' ? handleUnfollow(u._id) : handleFollow(u._id)}
-                          disabled={u.followStatus === 'pending'}
-                        >
-                          {u.followStatus === 'accepted' ? 'Following' : 
-                           u.followStatus === 'pending' ? 'Requested' : 'Follow'}
-                        </Button>
-                      )}
-
-                      {activeTab === 'following' && (
-                        <Button variant="outline" onClick={() => handleUnfollow(u._id)}>
-                          Unfollow
-                        </Button>
-                      )}
-
-                      {activeTab === 'followers' && (
-                        <Button variant="outline" onClick={() => handleRemove(u._id)}>
-                          Remove
-                        </Button>
-                      )}
-
-                      {activeTab === 'requests' && (
-                        <div className="flex gap-2">
-                          <Button onClick={() => handleAccept(u._id)} className="gap-2">
-                            <CheckCircle className="w-4 h-4" />
-                            Accept
-                          </Button>
-                          <Button variant="destructive" onClick={() => handleReject(u._id)} className="gap-2">
-                            <XCircle className="w-4 h-4" />
-                            Reject
-                          </Button>
+                  <Card key={u._id} className="p-4">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-4 flex-1 min-w-0">
+                        <Avatar className="flex-shrink-0">
+                          <AvatarImage src={u.photoUrl} />
+                          <AvatarFallback>{u.fullName?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <div 
+                            onClick={() => navigate(`/${u.username || u._id}`)}
+                            className="font-semibold hover:underline text-foreground cursor-pointer truncate"
+                          >
+                            {u.fullName}
+                          </div>
+                          <p className="text-sm text-muted-foreground truncate">{u.email}</p>
                         </div>
-                      )}
+                      </div>
+                      
+                      <div className="ml-4 flex-shrink-0">
+                        {activeTab === 'discover' && (
+                          <Button 
+                            variant={u.followStatus === 'accepted' ? "secondary" : "default"}
+                            onClick={() => u.followStatus === 'accepted' ? handleUnfollow(u._id) : handleFollow(u._id)}
+                            disabled={u.followStatus === 'pending'}
+                          >
+                            {u.followStatus === 'accepted' ? 'Following' : 
+                             u.followStatus === 'pending' ? 'Requested' : 'Follow'}
+                          </Button>
+                        )}
+
+                        {activeTab === 'following' && (
+                          <div className="flex gap-2">
+                            <Button variant="outline" onClick={() => handleUnfollow(u._id)}>
+                              Unfollow
+                            </Button>
+                          </div>
+                        )}
+
+                        {activeTab === 'followers' && (
+                          <div className="flex gap-2">
+                            <Button onClick={() => handleFollow(u._id)}>
+                              Follow Back
+                            </Button>
+                            <Button variant="outline" onClick={() => handleRemove(u._id)}>
+                              Remove
+                            </Button>
+                          </div>
+                        )}
+
+                        {activeTab === 'requests' && (
+                          <div className="flex gap-2">
+                            <Button onClick={() => handleAccept(u._id)} className="gap-2">
+                              <CheckCircle className="w-4 h-4" />
+                              Accept
+                            </Button>
+                            <Button variant="destructive" onClick={() => handleReject(u._id)} className="gap-2">
+                              <XCircle className="w-4 h-4" />
+                              Reject
+                            </Button>
+                          </div>
+                        )}
+
+                        {activeTab === 'sent' && (
+                          <Button variant="outline" onClick={() => handleUnfollow(u._id)}>
+                            Cancel
+                          </Button>
+                        )}
+                      </div>
                     </div>
                   </Card>
                 ))

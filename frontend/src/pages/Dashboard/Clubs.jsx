@@ -369,7 +369,7 @@ export default function Clubs() {
                     className="overflow-hidden hover:shadow-lg hover:border-primary/50 transition-all duration-300 group cursor-pointer"
                     onClick={() => navigate(`/clubs/${club._id}`)}
                   >
-                    <div className="aspect-square w-full overflow-hidden bg-muted">
+                    <div className="aspect-video w-full overflow-hidden bg-muted">
                       <img 
                         src={club.photoUrl || "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&auto=format&fit=crop&q=60"}
                         alt={club.name}

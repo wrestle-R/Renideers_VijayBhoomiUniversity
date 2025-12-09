@@ -4,12 +4,13 @@ import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { SidebarProvider } from '@/components/ui/sidebar';
 import { UserSidebar } from '@/components/UserSidebar';
 
 const Followers = () => {
   const { user } = useUser();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('followers');
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -73,6 +74,18 @@ const Followers = () => {
     }
   };
 
+  const handleFollow = async (targetUserId) => {
+    try {
+      await axios.post(`${import.meta.env.VITE_API_URL}/api/followers/follow`, 
+        { targetUserId },
+        { headers: { 'x-user-id': user.mongo_uid } }
+      );
+      fetchData();
+    } catch (error) {
+      console.error("Follow error:", error);
+    }
+  };
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
@@ -106,39 +119,47 @@ const Followers = () => {
         {loading ? (
           <p className="text-foreground">Loading...</p>
         ) : data.length === 0 ? (
-          <p className="text-muted-foreground">No users found in this list.</p>
         ) : (
           data.map((u) => (
-            <Card key={u._id} className="flex items-center justify-between p-4">
-              <div className="flex items-center gap-4">
-                <Avatar>
-                  <AvatarImage src={u.photoUrl} />
-                  <AvatarFallback>{u.fullName?.charAt(0)}</AvatarFallback>
-                </Avatar>
-                <div>
-                  <Link to={`/${u.username || u._id}`} className="font-semibold hover:underline text-foreground">
-                    {u.fullName}
-                  </Link>
-                  <p className="text-sm text-muted-foreground">{u.email}</p>
-                </div>
-              </div>
-              
-              <div>
-                {activeTab === 'requests' && (
-                  <div className="flex gap-2">
-                    <Button onClick={() => handleAccept(u._id)}>Accept</Button>
-                    <Button variant="destructive" onClick={() => handleRemove(u._id)}>Reject</Button>
+            <Card key={u._id} className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4 flex-1 min-w-0">
+                  <Avatar className="flex-shrink-0">
+                    <AvatarImage src={u.photoUrl} />
+                    <AvatarFallback>{u.fullName?.charAt(0)}</AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0">
+                    <div 
+                      onClick={() => navigate(`/${u.username || u._id}`)}
+                      className="font-semibold hover:underline text-foreground cursor-pointer truncate"
+                    >
+                      {u.fullName}
+                    </div>
+                    <p className="text-sm text-muted-foreground truncate">{u.email}</p>
                   </div>
-                )}
-                {activeTab === 'followers' && (
-                  <Button variant="outline" onClick={() => handleRemove(u._id)}>Remove</Button>
-                )}
-                {activeTab === 'following' && (
-                  <Button variant="outline" onClick={() => handleUnfollow(u._id)}>Unfollow</Button>
-                )}
+                </div>
+                
+                <div className="ml-4 flex-shrink-0">
+                  {activeTab === 'requests' && (
+                    <div className="flex gap-2">
+                      <Button onClick={() => handleAccept(u._id)}>Accept</Button>
+                      <Button variant="destructive" onClick={() => handleRemove(u._id)}>Reject</Button>
+                    </div>
+                  )}
+                  {activeTab === 'followers' && (
+                    <div className="flex gap-2">
+                      <Button onClick={() => handleFollow(u._id)}>Follow Back</Button>
+                      <Button variant="outline" onClick={() => handleRemove(u._id)}>Remove</Button>
+                    </div>
+                  )}
+                  {activeTab === 'following' && (
+                    <Button variant="outline" onClick={() => handleUnfollow(u._id)}>Unfollow</Button>
+                  )}
+                </div>
               </div>
             </Card>
           ))
+        )}))
         )}
         </div>
         </div>

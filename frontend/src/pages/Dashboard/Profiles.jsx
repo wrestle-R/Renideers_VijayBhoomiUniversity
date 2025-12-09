@@ -140,18 +140,18 @@ export default function Profiles() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="username">Username</Label>
-                    <Input id="username" name="username" value={formData.username} onChange={handleChange} placeholder="username" />
+                    <Input id="username" name="username" value={formData.username} onChange={handleChange} placeholder="username" className="border border-input" />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="bio">Bio</Label>
-                    <Input id="bio" name="bio" value={formData.bio} onChange={handleChange} placeholder="Tell us about yourself" />
+                    <Input id="bio" name="bio" value={formData.bio} onChange={handleChange} placeholder="Tell us about yourself" className="border border-input" />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="location">Location</Label>
-                      <Input id="location" name="location" value={formData.location} onChange={handleChange} placeholder="City, Country" />
+                      <Input id="location" name="location" value={formData.location} onChange={handleChange} placeholder="City, Country" className="border border-input" />
                     </div>
                     <div className="space-y-2">
                       <Label htmlFor="experienceLevel">Experience Level</Label>
@@ -172,20 +172,20 @@ export default function Profiles() {
 
                   <div className="space-y-2">
                     <Label htmlFor="goals">Goals (comma separated)</Label>
-                    <Input id="goals" name="goals" value={formData.goals} onChange={handleChange} placeholder="e.g. Hike Everest, Run 5k" />
+                    <Input id="goals" name="goals" value={formData.goals} onChange={handleChange} placeholder="e.g. Hike Everest, Run 5k" className="border border-input" />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="motivations">Motivations (comma separated)</Label>
-                    <Input id="motivations" name="motivations" value={formData.motivations} onChange={handleChange} placeholder="e.g. Fitness, Nature" />
+                    <Input id="motivations" name="motivations" value={formData.motivations} onChange={handleChange} placeholder="e.g. Fitness, Nature" className="border border-input" />
                   </div>
 
                   <div className="space-y-2">
                     <Label>Social Links</Label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Input name="website" value={formData.website} onChange={handleChange} placeholder="Website URL" />
-                      <Input name="instagram" value={formData.instagram} onChange={handleChange} placeholder="Instagram Handle" />
-                      <Input name="twitter" value={formData.twitter} onChange={handleChange} placeholder="Twitter Handle" />
+                      <Input name="website" value={formData.website} onChange={handleChange} placeholder="Website URL" className="border border-input" />
+                      <Input name="instagram" value={formData.instagram} onChange={handleChange} placeholder="Instagram Handle" className="border border-input" />
+                      <Input name="twitter" value={formData.twitter} onChange={handleChange} placeholder="Twitter Handle" className="border border-input" />
                     </div>
                   </div>
 

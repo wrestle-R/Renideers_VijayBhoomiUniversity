@@ -189,6 +189,33 @@ exports.getPendingRequests = async (req, res) => {
   }
 };
 
+// Get Sent Requests (requests I sent that are pending)
+exports.getSentRequests = async (req, res) => {
+  try {
+    const currentUserId = req.user.userId;
+    
+    const sentRequests = await Follower.find({
+      follower: currentUserId,
+      status: 'pending'
+    }).populate('following', 'fullName email photoUrl');
+
+    const requestsWithUsername = await Promise.all(sentRequests.map(async (r) => {
+        const user = r.following;
+        if (!user) return null;
+
+        const profile = await UserProfile.findOne({ user_id: user._id }).select('username');
+        return {
+            ...user.toObject(),
+            username: profile ? profile.username : null
+        };
+    }));
+
+    res.json(requestsWithUsername.filter(Boolean));
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Search Users to Follow
 exports.searchUsers = async (req, res) => {
   try {

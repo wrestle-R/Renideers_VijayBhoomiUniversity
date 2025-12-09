@@ -11,6 +11,7 @@ const trekRoutes = require('./routes/trekRoutes');
 const clubRoutes = require('./routes/clubRoutes');
 const aiRoutes = require('./routes/aiRoutes');        
 const photoRoutes = require('./routes/photoRoutes');  
+const activityRoutes = require('./routes/activityRoutes');
 
 const http = require('http');
 const { Server } = require('socket.io');
@@ -135,6 +136,7 @@ app.use('/api/users', userRoutes);
 app.use('/api/followers', followerRoutes);
 app.use('/api/treks', trekRoutes);
 app.use('/api/clubs', clubRoutes);
+app.use('/api/activities', activityRoutes);
 
 app.use('/api/ai', aiRoutes);
 app.use('/api', photoRoutes);
