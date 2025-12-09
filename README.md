@@ -161,18 +161,6 @@ This project contributors:
 - Gavin Soares (`gavin soares`) — gavinsoares200510@gmail.com
 - Shravyacs05 (`shravyacs05`) — 160271791+shravyacs05@users.noreply.github.com
 
-Support
 
-Open an issue or contact the maintainers via GitHub for support.
-
-
-<div align="center">
-  [![GitHub Stars](https://img.shields.io/github/stars/wrestle-R/Renideers_VijayBhoomiUniversity?style=social&cacheSeconds=60)](https://github.com/wrestle-R/Renideers_VijayBhoomiUniversity/stargazers)
-  [![GitHub Forks](https://img.shields.io/github/forks/wrestle-R/Renideers_VijayBhoomiUniversity?style=social)](https://github.com/wrestle-R/Renideers_VijayBhoomiUniversity/network/members)
-</div>
-
-Built with ♥ by the project contributors.
-
-
-````
+Built with ♥ by Team Renideers.
 
