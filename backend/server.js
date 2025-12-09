@@ -13,7 +13,6 @@ const followerRoutes = require('./routes/followerRoutes');
 const trekRoutes = require('./routes/trekRoutes');
 const clubRoutes = require('./routes/clubRoutes');
 const aiRoutes = require('./routes/aiRoutes');        
-const photoRoutes = require('./routes/photoRoutes');  
 const activityRoutes = require('./routes/activityRoutes');
 const trekPhotoRoutes = require('./routes/trekPhotoRoutes');
 
