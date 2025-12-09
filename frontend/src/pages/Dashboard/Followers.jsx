@@ -119,6 +119,7 @@ const Followers = () => {
         {loading ? (
           <p className="text-foreground">Loading...</p>
         ) : data.length === 0 ? (
+          <p className="text-muted-foreground">No users found in this list.</p>
         ) : (
           data.map((u) => (
             <Card key={u._id} className="p-4">
@@ -160,7 +161,7 @@ const Followers = () => {
             </Card>
           ))
         )}))
-        )}
+    
         </div>
         </div>
 

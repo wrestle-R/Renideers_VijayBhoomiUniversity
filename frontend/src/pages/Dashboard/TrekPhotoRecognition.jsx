@@ -34,18 +34,30 @@ const TrekPhotoRecognition = () => {
   }, [useCamera, stream]);
 
   const startCamera = async () => {
+    console.log('[startCamera] Attempting to start camera...');
     try {
+      console.log('[startCamera] Requesting media stream...');
       const mediaStream = await navigator.mediaDevices.getUserMedia({ 
         video: { facingMode: 'environment' },
         audio: false 
       });
       
+      console.log('[startCamera] Media stream obtained:', {
+        active: mediaStream.active,
+        tracks: mediaStream.getTracks().length
+      });
       setStream(mediaStream);
       setUseCamera(true);
       setError(null);
+      console.log('[startCamera] Camera started successfully');
     } catch (error) {
-      console.error('Error accessing camera:', error);
-      setError('Could not access camera. Please check permissions.');
+      console.error('[startCamera] ERROR:', {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        error: error
+      });
+      setError(`Could not access camera: ${error.message}. Please check permissions.`);
     }
   };
 
@@ -58,47 +70,95 @@ const TrekPhotoRecognition = () => {
   };
 
   const capturePhoto = () => {
-    if (videoRef.current && canvasRef.current) {
-      const video = videoRef.current;
-      const canvas = canvasRef.current;
-      
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      
-      const ctx = canvas.getContext('2d');
-      ctx.drawImage(video, 0, 0);
-      
-      const imageDataUrl = canvas.toDataURL('image/jpeg');
-      setCapturedImage(imageDataUrl);
-      stopCamera();
-      analyzeImage(imageDataUrl);
+    console.log('[capturePhoto] Capturing photo...');
+    try {
+      if (videoRef.current && canvasRef.current) {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        
+        console.log('[capturePhoto] Video dimensions:', {
+          videoWidth: video.videoWidth,
+          videoHeight: video.videoHeight
+        });
+        
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(video, 0, 0);
+        
+        const imageDataUrl = canvas.toDataURL('image/jpeg');
+        console.log('[capturePhoto] Image captured, data URL length:', imageDataUrl.length);
+        setCapturedImage(imageDataUrl);
+        stopCamera();
+        analyzeImage(imageDataUrl);
+      } else {
+        console.error('[capturePhoto] Video or canvas ref not available');
+        setError('Camera capture failed. Please try again.');
+      }
+    } catch (error) {
+      console.error('[capturePhoto] ERROR:', {
+        message: error.message,
+        stack: error.stack,
+        error: error
+      });
+      setError(`Failed to capture photo: ${error.message}`);
     }
   };
 
   const handleFileUpload = (event) => {
-    const file = event.target.files[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        setCapturedImage(e.target.result);
-        analyzeImage(e.target.result);
-      };
-      reader.readAsDataURL(file);
+    console.log('[handleFileUpload] File upload triggered');
+    try {
+      const file = event.target.files[0];
+      if (file) {
+        console.log('[handleFileUpload] File selected:', {
+          name: file.name,
+          size: file.size,
+          type: file.type
+        });
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          console.log('[handleFileUpload] File read successfully, result length:', e.target.result.length);
+          setCapturedImage(e.target.result);
+          analyzeImage(e.target.result);
+        };
+        reader.onerror = (error) => {
+          console.error('[handleFileUpload] FileReader error:', error);
+          setError('Failed to read file. Please try again.');
+        };
+        reader.readAsDataURL(file);
+      } else {
+        console.warn('[handleFileUpload] No file selected');
+      }
+    } catch (error) {
+      console.error('[handleFileUpload] ERROR:', {
+        message: error.message,
+        stack: error.stack,
+        error: error
+      });
+      setError(`Failed to upload file: ${error.message}`);
     }
   };
 
   const analyzeImage = async (imageDataUrl) => {
+    console.log('[analyzeImage] Starting image analysis...');
     setIsAnalyzing(true);
     setResults(null);
     setError(null);
 
     try {
+      console.log('[analyzeImage] Converting image data URL to blob...');
       const blob = await fetch(imageDataUrl).then(r => r.blob());
+      console.log('[analyzeImage] Blob created:', { size: blob.size, type: blob.type });
       
+      console.log('[analyzeImage] Calling identifySpeciesWithClaude...');
       const identificationResult = await identifySpeciesWithClaude(blob);
+      console.log('[analyzeImage] Identification result:', identificationResult);
       
       if (identificationResult && identificationResult.species && identificationResult.species !== 'unknown') {
+        console.log('[analyzeImage] Valid species identified, fetching details...');
         const detailedInfo = await getSpeciesDetails(identificationResult.species);
+        console.log('[analyzeImage] Details received:', detailedInfo);
         
         setResults({
           species: identificationResult.species,
@@ -108,79 +168,129 @@ const TrekPhotoRecognition = () => {
           dangerLevel: identificationResult.dangerLevel,
           details: detailedInfo,
         });
+        console.log('[analyzeImage] Results set successfully');
       } else {
+        console.warn('[analyzeImage] No valid species identified:', identificationResult);
         setError('Could not identify any species in the image. Please try a clearer photo.');
       }
     } catch (error) {
-      console.error('Error analyzing image:', error);
-      setError('Failed to analyze image. Please try again.');
+      console.error('[analyzeImage] ERROR:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        error: error
+      });
+      setError(`Failed to analyze image: ${error.message || 'Unknown error'}. Please try again.`);
     } finally {
+      console.log('[analyzeImage] Analysis complete, setting isAnalyzing to false');
       setIsAnalyzing(false);
     }
   };
 
   const identifySpeciesWithClaude = async (imageBlob) => {
+    console.log('[identifySpeciesWithClaude] Starting identification...');
     try {
+      console.log('[identifySpeciesWithClaude] Converting blob to base64...');
       const base64Image = await new Promise((resolve, reject) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           const base64String = reader.result.split(',')[1];
+          console.log('[identifySpeciesWithClaude] Base64 conversion complete, length:', base64String.length);
           resolve(base64String);
         };
-        reader.onerror = reject;
+        reader.onerror = (error) => {
+          console.error('[identifySpeciesWithClaude] FileReader error:', error);
+          reject(error);
+        };
         reader.readAsDataURL(imageBlob);
       });
 
-      console.log('Sending image to API...');
+      const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/identify-species`;
+      console.log('[identifySpeciesWithClaude] Sending request to:', apiUrl);
       
-      const response = await fetch('http://localhost:8000/api/identify-species', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ base64Image }),
       });
 
-      console.log('API Response Status:', response.status);
+      console.log('[identifySpeciesWithClaude] Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
       
       if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        console.error('API Error:', errorData);
-        throw new Error(`API error: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+        console.error('[identifySpeciesWithClaude] API Error Response:', errorData);
+        throw new Error(`API error (${response.status}): ${errorData.error || response.statusText}`);
       }
 
       const result = await response.json();
-      console.log('Identification result:', result);
+      console.log('[identifySpeciesWithClaude] Identification result:', {
+        species: result.species,
+        category: result.category,
+        confidence: result.confidence,
+        isDangerous: result.isDangerous,
+        dangerLevel: result.dangerLevel
+      });
       
       if (!result || !result.species || result.species === 'unknown') {
+        console.warn('[identifySpeciesWithClaude] No species identified or unknown species');
         return null;
       }
       
       return result;
     } catch (error) {
-      console.error('Error identifying species:', error);
+      console.error('[identifySpeciesWithClaude] CATCH ERROR:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        error: error
+      });
       return null;
     }
   };
 
   const getSpeciesDetails = async (speciesName) => {
+    console.log('[getSpeciesDetails] Starting details fetch for:', speciesName);
     try {
-      console.log('Getting species details for:', speciesName);
+      const apiUrl = `${import.meta.env.VITE_API_URL || 'http://localhost:8000'}/api/species-details`;
+      console.log('[getSpeciesDetails] Sending request to:', apiUrl);
       
-      const response = await fetch('http://localhost:8000/api/species-details', {
+      const response = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ speciesName }),
       });
 
+      console.log('[getSpeciesDetails] Response received:', {
+        status: response.status,
+        statusText: response.statusText,
+        ok: response.ok
+      });
+
       if (!response.ok) {
-        console.error('Species details API error:', response.statusText);
-        throw new Error(`API error: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
+        console.error('[getSpeciesDetails] API Error Response:', errorData);
+        throw new Error(`API error (${response.status}): ${errorData.error || response.statusText}`);
       }
 
       const details = await response.json();
-      console.log('Species details received:', details);
+      console.log('[getSpeciesDetails] Details received successfully:', {
+        hasScientificName: !!details.scientificName,
+        hasDescription: !!details.description,
+        hasHabitat: !!details.habitat,
+        detailsKeys: Object.keys(details)
+      });
       return details;
     } catch (error) {
-      console.error('Error getting species details:', error);
+      console.error('[getSpeciesDetails] CATCH ERROR:', {
+        message: error.message,
+        stack: error.stack,
+        name: error.name,
+        error: error
+      });
       return null;
     }
   };
