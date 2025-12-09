@@ -1,4 +1,4 @@
-// controllers/photoController.js
+// controllers/trekPhotoController.js
 require('dotenv').config();
 const fetch = require('node-fetch');
 

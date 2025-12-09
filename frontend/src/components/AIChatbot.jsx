@@ -3,6 +3,7 @@ import { MessageCircle, X, Send, Bot } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 
 export function AIChatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -70,7 +71,7 @@ export function AIChatbot() {
                       ? 'bg-primary text-primary-foreground rounded-br-none' 
                       : 'bg-muted text-foreground rounded-bl-none'
                   }`}>
-                    {m.content}
+                    <ReactMarkdown>{m.content}</ReactMarkdown>
                   </div>
                 </div>
               ))}
