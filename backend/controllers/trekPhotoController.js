@@ -55,6 +55,7 @@ function parseJsonFromGemini(text) {
   }
 }
 
+
 function normalizeIdentification(obj) {
   const out = Object.assign({}, obj);
 

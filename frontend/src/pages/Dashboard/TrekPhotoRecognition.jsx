@@ -155,6 +155,13 @@ const TrekPhotoRecognition = () => {
       const identificationResult = await identifySpeciesWithClaude(blob);
       console.log('[analyzeImage] Identification result:', identificationResult);
       
+      if (identificationResult?.isUnidentified) {
+        console.warn('[analyzeImage] Species could not be identified');
+        setError('Could not identify any species in the image. Please try a clearer photo with better lighting and positioning.');
+        setIsAnalyzing(false);
+        return;
+      }
+      
       if (identificationResult && identificationResult.species && identificationResult.species !== 'unknown') {
         console.log('[analyzeImage] Valid species identified, fetching details...');
         const detailedInfo = await getSpeciesDetails(identificationResult.species);
@@ -182,7 +189,12 @@ const TrekPhotoRecognition = () => {
         name: error.name,
         error: error
       });
-      setError(`Failed to analyze image: ${error.message || 'Unknown error'}. Please try again.`);
+      
+      if (error.message === 'API_QUOTA_EXHAUSTED') {
+        setError('🔑 API Key Quota Exhausted: The AI service has reached its usage limit. Please try again later or contact support.');
+      } else {
+        setError(`Failed to analyze image: ${error.message || 'Unknown error'}. Please try again.`);
+      }
     } finally {
       console.log('[analyzeImage] Analysis complete, setting isAnalyzing to false');
       setIsAnalyzing(false);
@@ -225,6 +237,14 @@ const TrekPhotoRecognition = () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
         console.error('[identifySpeciesWithClaude] API Error Response:', errorData);
+        
+        // Check for API quota/key exhaustion errors
+        if (response.status === 429 || errorData.error?.includes('quota') || errorData.error?.includes('RESOURCE_EXHAUSTED')) {
+          const error = new Error('API_QUOTA_EXHAUSTED');
+          error.statusCode = response.status;
+          throw error;
+        }
+        
         throw new Error(`API error (${response.status}): ${errorData.error || response.statusText}`);
       }
 
@@ -240,7 +260,7 @@ const TrekPhotoRecognition = () => {
       
       if (!result || !result.species || result.species === 'unknown') {
         console.warn('[identifySpeciesWithClaude] No species identified or unknown species');
-        return null;
+        return { ...result, isUnidentified: true };
       }
       
       return result;
@@ -251,7 +271,7 @@ const TrekPhotoRecognition = () => {
         name: error.name,
         error: error
       });
-      return null;
+      throw error;
     }
   };
 
@@ -393,9 +413,20 @@ const TrekPhotoRecognition = () => {
             </div>
 
             {error && (
-              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex items-center gap-3">
-                <AlertTriangle size={18} className="text-red-600 dark:text-red-400" />
-                <p className="text-sm text-red-800 dark:text-red-300 m-0">{error}</p>
+              <div className={`rounded-xl p-5 flex gap-3 border ${
+                error.includes('API Key Quota') 
+                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' 
+                  : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+              }`}>
+                <AlertTriangle size={20} className={error.includes('API Key Quota') ? 'text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5' : 'text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5'} />
+                <div className="flex-1">
+                  <p className={`text-sm font-semibold m-0 mb-1 ${error.includes('API Key Quota') ? 'text-red-800 dark:text-red-300' : 'text-orange-800 dark:text-orange-300'}`}>
+                    {error.includes('API Key Quota') ? 'Service Temporarily Unavailable' : 'Identification Failed'}
+                  </p>
+                  <p className={`text-sm m-0 leading-relaxed ${error.includes('API Key Quota') ? 'text-red-700 dark:text-red-400' : 'text-orange-700 dark:text-orange-400'}`}>
+                    {error}
+                  </p>
+                </div>
               </div>
             )}
 
@@ -453,6 +484,24 @@ const TrekPhotoRecognition = () => {
                 <Loader className="animate-spin text-primary" size={32} />
                 <h3 className="text-base font-semibold text-foreground m-0">Analyzing Image...</h3>
                 <p className="text-sm text-muted-foreground m-0">Identifying species and gathering details</p>
+              </div>
+            )}
+
+            {error && !isAnalyzing && (
+              <div className={`rounded-xl p-5 flex gap-3 border ${
+                error.includes('API Key Quota') 
+                  ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' 
+                  : 'bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800'
+              }`}>
+                <AlertTriangle size={20} className={error.includes('API Key Quota') ? 'text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5' : 'text-orange-600 dark:text-orange-400 flex-shrink-0 mt-0.5'} />
+                <div className="flex-1">
+                  <p className={`text-sm font-semibold m-0 mb-1 ${error.includes('API Key Quota') ? 'text-red-800 dark:text-red-300' : 'text-orange-800 dark:text-orange-300'}`}>
+                    {error.includes('API Key Quota') ? 'Service Temporarily Unavailable' : 'Identification Failed'}
+                  </p>
+                  <p className={`text-sm m-0 leading-relaxed ${error.includes('API Key Quota') ? 'text-red-700 dark:text-red-400' : 'text-orange-700 dark:text-orange-400'}`}>
+                    {error}
+                  </p>
+                </div>
               </div>
             )}
 
