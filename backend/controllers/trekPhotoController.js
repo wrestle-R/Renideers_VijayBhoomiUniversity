@@ -238,7 +238,7 @@ exports.identifySpecies = async (req, res) => {
       ],
       generationConfig: {
         temperature: 0.2,
-        maxOutputTokens: 500,
+        maxOutputTokens: 1000,
       },
     };
 
@@ -253,6 +253,19 @@ exports.identifySpecies = async (req, res) => {
     if (!response.ok) {
       const errText = await response.text();
       console.error('AI API error:', response.status);
+
+      // Handle Rate Limiting (429)
+      if (response.status === 429) {
+        return res.status(429).json({
+          error: 'AI service is busy (Rate Limit Reached)',
+          message: 'Please try again in a few moments.',
+          species: 'unknown',
+          category: 'unknown',
+          confidence: 'low',
+          isDangerous: false,
+          dangerLevel: 'none',
+        });
+      }
 
       try {
         const errorJson = JSON.parse(errText);
@@ -361,25 +374,15 @@ exports.getSpeciesDetails = async (req, res) => {
             {
               text: `Provide detailed, accurate information about this species: "${speciesName}"
 
-  Respond ONLY with a valid JSON object (no markdown, no backticks, no additional text). Use the exact schema below. Use arrays for lists and booleans for yes/no fields. If a field is not applicable, return an empty string or an empty array.
+  Respond ONLY with a valid JSON object (no markdown, no backticks, no additional text). Use the exact schema below. Use arrays for lists. If a field is not applicable, return an empty string or an empty array.
 
   Return this exact JSON schema:
 
   {
     "scientificName": "string",
-    "commonNames": ["string"],
-    "description": "string",
     "habitat": "string",
     "distribution": "string",
-    "behavior": "string",
-    "diet": "string",
-    "conservation": "string",
-    "dangerInfo": "string",
-    "interestingFacts": ["string", "string", "string"],
-    "safetyTips": ["string", "string", "string"],
-    "isThreatened": true|false,
-    "isVenomous": true|false,
-    "isPoisonous": true|false
+    "safetyTips": ["string", "string", "string"]
   }
 
   Be accurate and thorough. Provide region-specific distribution notes (India / South Asia) when applicable.`,
@@ -389,7 +392,7 @@ exports.getSpeciesDetails = async (req, res) => {
       ],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 2000,
+        maxOutputTokens: 1000,
       },
     };
 
@@ -404,6 +407,14 @@ exports.getSpeciesDetails = async (req, res) => {
     if (!response.ok) {
       const errText = await response.text();
       console.error('AI API error:', response.status, errText);
+
+      if (response.status === 429) {
+        return res.status(429).json({
+          error: 'AI service is busy (Rate Limit Reached)',
+          description: 'Please try again in a few moments.',
+        });
+      }
+
       return res.status(500).json({
         error: 'AI service temporarily unavailable',
         description: 'Unable to retrieve species information',
@@ -429,17 +440,9 @@ exports.getSpeciesDetails = async (req, res) => {
       console.log('Species Details:', JSON.stringify(json, null, 2));
       console.log('\n✅ Details breakdown:');
       console.log('  Scientific Name:', json.scientificName || 'N/A');
-      console.log('  Common Names:', json.commonNames?.length || 0, 'names');
-      console.log('  Has Description:', !!json.description);
       console.log('  Has Habitat:', !!json.habitat);
       console.log('  Has Distribution:', !!json.distribution);
-      console.log('  Has Behavior:', !!json.behavior);
-      console.log('  Has Diet:', !!json.diet);
-      console.log('  Interesting Facts:', json.interestingFacts?.length || 0, 'facts');
       console.log('  Safety Tips:', json.safetyTips?.length || 0, 'tips');
-      console.log('  Is Threatened:', json.isThreatened || false);
-      console.log('  Is Venomous:', json.isVenomous || false);
-      console.log('  Is Poisonous:', json.isPoisonous || false);
       console.log('====================================================\n');
       return res.json(json);
     } catch (parseError) {
