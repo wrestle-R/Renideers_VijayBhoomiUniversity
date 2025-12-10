@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button'
 import { TextEffect } from '@/components/ui/text-effect'
 import { AnimatedGroup } from '@/components/ui/animated-group'
 import { Navbar } from './Navbar'
+import { useTheme } from '@/context/ThemeContext'
 
 const transitionVariants = {
     item: {
@@ -27,6 +28,7 @@ const transitionVariants = {
 }
 
 export default function HeroSection() {
+    const { theme } = useTheme();
     return (
         <>
             <Navbar />
@@ -170,9 +172,23 @@ export default function HeroSection() {
                                 className="mask-b-from-55% relative -mr-56 mt-8 overflow-hidden px-2 sm:mr-0 sm:mt-12 md:mt-20">
                                 <div
                                     className="inset-shadow-2xs ring-background dark:inset-shadow-white/20 bg-background relative mx-auto max-w-6xl overflow-hidden rounded-2xl border p-4 shadow-lg shadow-zinc-950/15 ring-1">
-                                    {/* Placeholder images or remove if not available */}
-                                    <div className="aspect-15/8 bg-muted rounded-2xl flex items-center justify-center">
-                                        <span className="text-muted-foreground">App Screenshot Placeholder</span>
+                                    <div className="aspect-15/8 bg-muted rounded-2xl flex items-center justify-center overflow-hidden">
+                                        <img
+                                            src={theme === 'dark' ? '/landing/dash_dark.png' : '/landing/dash_light.png'}
+                                            alt="App dashboard preview"
+                                            className="w-full h-full object-cover rounded-2xl"
+                                            onError={(e) => {
+                                                // fallback to placeholder text if image not found
+                                                e.currentTarget.style.display = 'none';
+                                                const parent = e.currentTarget.parentElement;
+                                                if (parent) {
+                                                    const span = document.createElement('span');
+                                                    span.className = 'text-muted-foreground';
+                                                    span.textContent = 'App Screenshot Placeholder';
+                                                    parent.appendChild(span);
+                                                }
+                                            }}
+                                        />
                                     </div>
                                 </div>
                             </div>
