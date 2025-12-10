@@ -49,18 +49,6 @@ export const Navbar = () => {
               </div>
             </div>
 
-            {/* CENTER DESKTOP MENU */}
-            <div className="absolute inset-0 m-auto hidden size-fit lg:block">
-              <nav className="flex items-center gap-6 text-sm font-medium text-muted-foreground">
-                {/* Add more links if you want later */}
-                <Link
-                  to="/trek-ai"
-                  className="hover:text-foreground transition-colors"
-                >
-                  Trek AI Photo
-                </Link>
-              </nav>
-            </div>
 
             {/* RIGHT SIDE: mobile dropdown + auth buttons */}
             <div
