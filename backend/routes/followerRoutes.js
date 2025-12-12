@@ -14,6 +14,7 @@ router.post('/remove', followerController.removeFollower);
 router.get('/followers', followerController.getFollowers);
 router.get('/following', followerController.getFollowing);
 router.get('/pending', followerController.getPendingRequests);
+router.get('/sent', followerController.getSentRequests);
 router.get('/search', followerController.searchUsers);
 router.get('/stats', followerController.getStats);
 

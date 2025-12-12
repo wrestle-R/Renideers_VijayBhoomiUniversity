@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const Trek = require('../models/Trek');
+const Activity = require('../models/activity');
 const User = require('../models/User');
 const trekController = require('../controllers/trekController');
 
@@ -25,18 +25,18 @@ router.post('/start', async (req, res) => {
       await user.save();
     }
     
-    // Create new trek
-    const trek = new Trek({
+    // Create new activity
+    const activity = new Activity({
       userId: user._id,
       firebaseUid,
-      title: title || `Trek ${new Date().toLocaleDateString()}`,
+      title: title || `Activity ${new Date().toLocaleDateString()}`,
       startTime: new Date(),
       status: 'active',
     });
     
     // Add initial location if provided
     if (initialLocation) {
-      trek.addLocationPoint({
+      activity.addLocationPoint({
         latitude: initialLocation.latitude,
         longitude: initialLocation.longitude,
         altitude: initialLocation.altitude || 0,
@@ -46,16 +46,16 @@ router.post('/start', async (req, res) => {
         heading: initialLocation.heading,
       });
     }
-    
-    await trek.save();
-    
+
+    await activity.save();
+
     res.status(201).json({
       success: true,
-      trek: {
-        _id: trek._id,
-        title: trek.title,
-        status: trek.status,
-        startTime: trek.startTime,
+      activity: {
+        _id: activity._id,
+        title: activity.title,
+        status: activity.status,
+        startTime: activity.startTime,
       },
     });
   } catch (error) {
@@ -70,16 +70,16 @@ router.post('/:trekId/location', async (req, res) => {
     const { trekId } = req.params;
     const { latitude, longitude, altitude, accuracy, speed, heading, timestamp } = req.body;
     
-    const trek = await Trek.findById(trekId);
-    if (!trek) {
-      return res.status(404).json({ error: 'Trek not found' });
+    const activity = await Activity.findById(trekId);
+    if (!activity) {
+      return res.status(404).json({ error: 'Activity not found' });
     }
-    
-    if (trek.status !== 'active') {
-      return res.status(400).json({ error: 'Trek is not active' });
+
+    if (activity.status !== 'active') {
+      return res.status(400).json({ error: 'Activity is not active' });
     }
-    
-    trek.addLocationPoint({
+
+    activity.addLocationPoint({
       latitude,
       longitude,
       altitude: altitude || 0,
@@ -88,10 +88,10 @@ router.post('/:trekId/location', async (req, res) => {
       heading,
       timestamp: timestamp ? new Date(timestamp) : new Date(),
     });
-    
-    await trek.save();
-    
-    res.json({ success: true, pointsCount: trek.path.length });
+
+    await activity.save();
+
+    res.json({ success: true, pointsCount: activity.path.length });
   } catch (error) {
     console.error('Error adding location:', error);
     res.status(500).json({ error: 'Failed to add location', details: error.message });
@@ -104,16 +104,16 @@ router.post('/:trekId/metrics', async (req, res) => {
     const { trekId } = req.params;
     const { steps, elevation, heartRate, caloriesBurned, speed, distance, timestamp } = req.body;
     
-    const trek = await Trek.findById(trekId);
-    if (!trek) {
-      return res.status(404).json({ error: 'Trek not found' });
+    const activity = await Activity.findById(trekId);
+    if (!activity) {
+      return res.status(404).json({ error: 'Activity not found' });
     }
-    
-    if (trek.status !== 'active') {
-      return res.status(400).json({ error: 'Trek is not active' });
+
+    if (activity.status !== 'active') {
+      return res.status(400).json({ error: 'Activity is not active' });
     }
-    
-    trek.addMetricsSnapshot({
+
+    activity.addMetricsSnapshot({
       timestamp: timestamp ? new Date(timestamp) : new Date(),
       steps: steps || 0,
       elevation: elevation || 0,
@@ -122,10 +122,10 @@ router.post('/:trekId/metrics', async (req, res) => {
       speed: speed || 0,
       distance: distance || 0,
     });
-    
-    await trek.save();
-    
-    res.json({ success: true, metricsCount: trek.metricsHistory.length });
+
+    await activity.save();
+
+    res.json({ success: true, metricsCount: activity.metricsHistory.length });
   } catch (error) {
     console.error('Error adding metrics:', error);
     res.status(500).json({ error: 'Failed to add metrics', details: error.message });
@@ -137,15 +137,15 @@ router.post('/:trekId/pause', async (req, res) => {
   try {
     const { trekId } = req.params;
     
-    const trek = await Trek.findById(trekId);
-    if (!trek) {
-      return res.status(404).json({ error: 'Trek not found' });
+    const activity = await Activity.findById(trekId);
+    if (!activity) {
+      return res.status(404).json({ error: 'Activity not found' });
     }
-    
-    trek.status = 'paused';
-    await trek.save();
-    
-    res.json({ success: true, status: trek.status });
+
+    activity.status = 'paused';
+    await activity.save();
+
+    res.json({ success: true, status: activity.status });
   } catch (error) {
     console.error('Error pausing trek:', error);
     res.status(500).json({ error: 'Failed to pause trek', details: error.message });
@@ -157,15 +157,15 @@ router.post('/:trekId/resume', async (req, res) => {
   try {
     const { trekId } = req.params;
     
-    const trek = await Trek.findById(trekId);
-    if (!trek) {
-      return res.status(404).json({ error: 'Trek not found' });
+    const activity = await Activity.findById(trekId);
+    if (!activity) {
+      return res.status(404).json({ error: 'Activity not found' });
     }
-    
-    trek.status = 'active';
-    await trek.save();
-    
-    res.json({ success: true, status: trek.status });
+
+    activity.status = 'active';
+    await activity.save();
+
+    res.json({ success: true, status: activity.status });
   } catch (error) {
     console.error('Error resuming trek:', error);
     res.status(500).json({ error: 'Failed to resume trek', details: error.message });
@@ -178,32 +178,32 @@ router.post('/:trekId/complete', async (req, res) => {
     const { trekId } = req.params;
     const { notes, difficulty, weather, tags } = req.body;
     
-    const trek = await Trek.findById(trekId);
-    if (!trek) {
-      return res.status(404).json({ error: 'Trek not found' });
+    const activity = await Activity.findById(trekId);
+    if (!activity) {
+      return res.status(404).json({ error: 'Activity not found' });
     }
-    
-    trek.complete();
-    
+
+    activity.complete();
+
     // Add optional metadata
-    if (notes) trek.notes = notes;
-    if (difficulty) trek.difficulty = difficulty;
-    if (weather) trek.weather = weather;
-    if (tags) trek.tags = tags;
-    
-    await trek.save();
-    
+    if (notes) activity.notes = notes;
+    if (difficulty) activity.difficulty = difficulty;
+    if (weather) activity.weather = weather;
+    if (tags) activity.tags = tags;
+
+    await activity.save();
+
     res.json({
       success: true,
-      trek: {
-        _id: trek._id,
-        title: trek.title,
-        status: trek.status,
-        startTime: trek.startTime,
-        endTime: trek.endTime,
-        duration: trek.duration,
-        summary: trek.summary,
-        path: trek.path,
+      activity: {
+        _id: activity._id,
+        title: activity.title,
+        status: activity.status,
+        startTime: activity.startTime,
+        endTime: activity.endTime,
+        duration: activity.duration,
+        summary: activity.summary,
+        path: activity.path,
       },
     });
   } catch (error) {
@@ -217,12 +217,12 @@ router.get('/:trekId', async (req, res) => {
   try {
     const { trekId } = req.params;
     
-    const trek = await Trek.findById(trekId);
-    if (!trek) {
-      return res.status(404).json({ error: 'Trek not found' });
+    const activity = await Activity.findById(trekId);
+    if (!activity) {
+      return res.status(404).json({ error: 'Activity not found' });
     }
-    
-    res.json({ success: true, trek });
+
+    res.json({ success: true, activity });
   } catch (error) {
     console.error('Error fetching trek:', error);
     res.status(500).json({ error: 'Failed to fetch trek', details: error.message });
@@ -242,17 +242,17 @@ router.get('/user/:firebaseUid', async (req, res) => {
     
     const skip = (parseInt(page) - 1) * parseInt(limit);
     
-    const treks = await Trek.find(query)
+    const activities = await Activity.find(query)
       .sort({ startTime: -1 })
       .limit(parseInt(limit))
       .skip(skip)
       .select('-metricsHistory -path');
     
-    const total = await Trek.countDocuments(query);
-    
+    const total = await Activity.countDocuments(query);
+
     res.json({
       success: true,
-      treks,
+      activities,
       pagination: {
         total,
         page: parseInt(page),
@@ -271,14 +271,14 @@ router.get('/user/:firebaseUid/active', async (req, res) => {
   try {
     const { firebaseUid } = req.params;
     
-    const trek = await Trek.findOne({
+    const activity = await Activity.findOne({
       firebaseUid,
       status: { $in: ['active', 'paused'] },
     }).sort({ startTime: -1 });
-    
+
     res.json({
       success: true,
-      trek: trek || null,
+      activity: activity || null,
     });
   } catch (error) {
     console.error('Error fetching active trek:', error);
@@ -291,12 +291,12 @@ router.delete('/:trekId', async (req, res) => {
   try {
     const { trekId } = req.params;
     
-    const trek = await Trek.findByIdAndDelete(trekId);
-    if (!trek) {
-      return res.status(404).json({ error: 'Trek not found' });
+    const activity = await Activity.findByIdAndDelete(trekId);
+    if (!activity) {
+      return res.status(404).json({ error: 'Activity not found' });
     }
-    
-    res.json({ success: true, message: 'Trek deleted successfully' });
+
+    res.json({ success: true, message: 'Activity deleted successfully' });
   } catch (error) {
     console.error('Error deleting trek:', error);
     res.status(500).json({ error: 'Failed to delete trek', details: error.message });
@@ -307,6 +307,6 @@ router.delete('/:trekId', async (req, res) => {
 router.get('/', trekController.getAllTreks);
 
 // GET /treks/:id - Return single trek by ID
-router.get('/:id', trekController.getTrekById);
+router.get('/normal/:id', trekController.getTrekById);
 
 module.exports = router;

@@ -3,16 +3,23 @@ import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/ca
 import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
 import { SidebarProvider } from "../../components/ui/sidebar";
 import { UserSidebar } from "../../components/UserSidebar";
-import { Mountain, Trophy, Coins, Users } from "lucide-react";
+import { Mountain, Trophy, Coins, Users, CheckCircle2, AlertCircle, Activity, MapPin, Clock, Bell } from "lucide-react";
 import { LoadingPage } from "../../components/LoadingPage";
+import { Button } from "../../components/ui/button";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { ActivityFeed } from "../../components/ActivityFeed";
 
 export default function Dashboard() {
   const { user } = useUser();
+  const navigate = useNavigate();
   const [stats, setStats] = useState({ followersCount: 0, followingCount: 0 });
   const [friends, setFriends] = useState([]);
+  const [profileComplete, setProfileComplete] = useState(false);
+  const [profileLoading, setProfileLoading] = useState(true);
+  const [viewMode, setViewMode] = useState('dashboard');
+  const [pendingRequests, setPendingRequests] = useState([]);
 
   useEffect(() => {
     if (user) {
@@ -39,8 +46,42 @@ export default function Dashboard() {
         }
       };
 
+      const checkProfileCompletion = async () => {
+        try {
+          setProfileLoading(true);
+          const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users/profile/${user.mongo_uid}`);
+          if (res.ok) {
+            const data = await res.json();
+            const isComplete = !!(
+              data.username && 
+              data.bio && 
+              data.location && 
+              data.experienceLevel
+            );
+            setProfileComplete(isComplete);
+          }
+        } catch (error) {
+          console.error("Error checking profile:", error);
+        } finally {
+          setProfileLoading(false);
+        }
+      };
+
+      const fetchPendingRequests = async () => {
+        try {
+          const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/followers/pending`, {
+            headers: { 'x-user-id': user.mongo_uid }
+          });
+          setPendingRequests(res.data);
+        } catch (error) {
+          console.error("Error fetching pending requests:", error);
+        }
+      };
+
       fetchStats();
       fetchFriends();
+      checkProfileCompletion();
+      fetchPendingRequests();
     }
   }, [user]);
 
@@ -52,11 +93,87 @@ export default function Dashboard() {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <UserSidebar />
-        <main className="flex-1 overflow-auto p-8">
+        <main className="flex-1 overflow-auto p-8 pb-24 lg:pb-8 lg:ml-64">
           <div className="mx-auto max-w-5xl space-y-8">
             <div className="flex items-center justify-between space-y-2">
               <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+              <div className="flex items-center space-x-2 bg-muted p-1 rounded-lg">
+                <Button 
+                  variant={viewMode === 'dashboard' ? 'default' : 'ghost'} 
+                  size="sm" 
+                  onClick={() => setViewMode('dashboard')}
+                >
+                  Dashboard
+                </Button>
+                <Button 
+                  variant={viewMode === 'feed' ? 'default' : 'ghost'} 
+                  size="sm" 
+                  onClick={() => setViewMode('feed')}
+                >
+                  Feed
+                </Button>
+              </div>
             </div>
+
+            {viewMode === 'dashboard' ? (
+              <div className="space-y-8">
+                {/* Pending Requests Notification */}
+                {pendingRequests.length > 0 && (
+                  <Card className="border-2 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
+                    <CardContent className="pt-6">
+                      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div className="flex items-center gap-4 min-w-0">
+                          <Bell className="h-8 w-8 text-blue-600 dark:text-blue-400 flex-shrink-0" />
+                          <div className="min-w-0">
+                            <p className="font-semibold truncate text-blue-900 dark:text-blue-100">
+                              {pendingRequests.length} Pending Follow Request{pendingRequests.length > 1 ? 's' : ''}
+                            </p>
+                            <p className="text-sm leading-snug text-blue-700 dark:text-blue-200">
+                              You have new follow requests waiting for your approval.
+                            </p>
+                          </div>
+                        </div>
+                        <Button 
+                          onClick={() => navigate("/explore")}
+                          className="w-full md:w-auto flex-shrink-0 bg-blue-600 hover:bg-blue-700 text-white"
+                        >
+                          View Requests
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* Profile Completion Indicator */}
+                {!profileLoading && (
+              <Card className={`border-2 ${profileComplete ? 'border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800' : 'border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800'}`}>
+                <CardContent className="pt-6">
+                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                    <div className="flex items-center gap-4 min-w-0">
+                      {profileComplete ? (
+                        <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400 flex-shrink-0" />
+                      ) : (
+                        <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400 flex-shrink-0" />
+                      )}
+                      <div className="min-w-0">
+                        <p className={`font-semibold truncate ${profileComplete ? 'text-green-900 dark:text-green-100' : 'text-amber-900 dark:text-amber-100'}`}>
+                          {profileComplete ? "Profile Complete" : "Complete Your Profile"}
+                        </p>
+                        <p className={`text-sm leading-snug ${profileComplete ? 'text-green-700 dark:text-green-200' : 'text-amber-700 dark:text-amber-200'}`}>
+                          {profileComplete ? "Great! Your profile is all set up." : "Add more details to your profile to help others find you."}
+                        </p>
+                      </div>
+                    </div>
+                    <Button 
+                      onClick={() => navigate("/dashboard/profiles")}
+                      className={`w-full md:w-auto flex-shrink-0 ${profileComplete ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}
+                    >
+                      {profileComplete ? "View Profile" : "Complete Profile"}
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
             
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
               <Card>
@@ -104,14 +221,14 @@ export default function Dashboard() {
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">
-                    Tokens Earned
+                    Distance Travelled
                   </CardTitle>
-                  <Coins className="h-4 w-4 text-muted-foreground" />
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
                 </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">0 TRK</div>
+                  <div className="text-2xl font-bold">12.5 km</div>
                   <p className="text-xs text-muted-foreground">
-                    +0% from last month
+                    this week
                   </p>
                 </CardContent>
               </Card>
@@ -168,6 +285,12 @@ export default function Dashboard() {
                 </CardContent>
               </Card>
             </div>
+            </div>
+            ) : (
+              <div className="space-y-6">
+                <ActivityFeed />
+              </div>
+            )}
           </div>
         </main>
       </div>

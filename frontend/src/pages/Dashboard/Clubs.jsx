@@ -123,7 +123,7 @@ export default function Clubs() {
   return (
     <div className="flex min-h-screen bg-background">
       <UserSidebar />
-      <main className="flex-1 ml-64 p-8">
+      <main className="flex-1 ml-0 lg:ml-64 p-8 pb-24 lg:pb-8">
         <div className="max-w-7xl mx-auto space-y-8">
           {/* Header */}
           <div className="space-y-4">
@@ -369,7 +369,7 @@ export default function Clubs() {
                     className="overflow-hidden hover:shadow-lg hover:border-primary/50 transition-all duration-300 group cursor-pointer"
                     onClick={() => navigate(`/clubs/${club._id}`)}
                   >
-                    <div className="aspect-square w-full overflow-hidden bg-muted">
+                    <div className="aspect-video w-full overflow-hidden bg-muted">
                       <img 
                         src={club.photoUrl || "https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&auto=format&fit=crop&q=60"}
                         alt={club.name}

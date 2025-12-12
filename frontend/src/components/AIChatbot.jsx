@@ -3,6 +3,7 @@ import { MessageCircle, X, Send, Bot } from 'lucide-react';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
 import { motion, AnimatePresence } from 'framer-motion';
+import ReactMarkdown from 'react-markdown';
 
 export function AIChatbot() {
   const [isOpen, setIsOpen] = useState(false);
@@ -50,7 +51,7 @@ export function AIChatbot() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-20 right-6 w-80 md:w-96 h-[500px] bg-background border border-border rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden"
+            className="fixed bottom-36 md:bottom-20 right-6 w-80 md:w-96 h-[500px] bg-background border border-border rounded-xl shadow-2xl z-50 flex flex-col overflow-hidden"
           >
             <div className="p-4 bg-primary text-primary-foreground flex justify-between items-center">
               <div className="flex items-center gap-2">
@@ -70,7 +71,7 @@ export function AIChatbot() {
                       ? 'bg-primary text-primary-foreground rounded-br-none' 
                       : 'bg-muted text-foreground rounded-bl-none'
                   }`}>
-                    {m.content}
+                    <ReactMarkdown>{m.content}</ReactMarkdown>
                   </div>
                 </div>
               ))}
@@ -103,7 +104,7 @@ export function AIChatbot() {
         whileHover={{ scale: 1.1 }}
         whileTap={{ scale: 0.9 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-6 right-6 w-12 h-12 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-primary/90 transition-colors"
+        className="fixed bottom-20 md:bottom-6 right-6 w-12 h-12 bg-primary text-primary-foreground rounded-full shadow-lg flex items-center justify-center z-50 hover:bg-primary/90 transition-colors"
       >
         {isOpen ? <X className="w-6 h-6" /> : <MessageCircle className="w-6 h-6" />}
       </motion.button>

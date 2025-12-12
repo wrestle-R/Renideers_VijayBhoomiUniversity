@@ -1,4 +1,4 @@
-const Trekk = require('../models/Trek');
+const Trekk = require('../models/Trekk');
 
 // Get all treks
 exports.getAllTreks = async (req, res) => {
@@ -12,8 +12,10 @@ exports.getAllTreks = async (req, res) => {
 
 // Get single trek by ID
 exports.getTrekById = async (req, res) => {
+  console.log(req.params.id);
   try {
     const trek = await Trekk.findById(req.params.id);
+    console.log(trek);
     if (!trek) return res.status(404).json({ error: 'Trek not found' });
     res.json(trek);
   } catch (err) {

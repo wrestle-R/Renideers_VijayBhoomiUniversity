@@ -17,7 +17,7 @@ const TrekDetail = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    fetch(`${import.meta.env.VITE_API_URL}/api/treks/${id}`)
+    fetch(`${import.meta.env.VITE_API_URL}/api/treks/normal/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch trek");
         return res.json();
@@ -50,7 +50,7 @@ const TrekDetail = () => {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <UserSidebar />
-        <main className="flex-1 overflow-auto p-8 flex items-center justify-center">
+        <main className="flex-1 overflow-auto p-8 pb-24 lg:pb-8 lg:ml-64 flex items-center justify-center">
           <div>Loading trek...</div>
         </main>
       </div>
@@ -61,8 +61,8 @@ const TrekDetail = () => {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <UserSidebar />
-        <main className="flex-1 overflow-auto p-8 flex items-center justify-center">
-          <div className="text-destructive">Error: {error}</div>
+        <main className="flex-1 overflow-auto p-8 pb-24 lg:pb-8 lg:ml-64 flex items-center justify-center">
+          <div>Error: {error}</div>
         </main>
       </div>
     </SidebarProvider>
@@ -83,7 +83,7 @@ const TrekDetail = () => {
     <SidebarProvider>
       <div className="flex min-h-screen w-full bg-background">
         <UserSidebar />
-        <main className="flex-1 overflow-auto p-8 lg:ml-64">
+        <main className="flex-1 overflow-auto p-8 pb-24 lg:pb-8 lg:ml-64">
           <div className="mx-auto max-w-4xl">
             <Button 
               variant="ghost" 

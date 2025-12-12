@@ -189,30 +189,67 @@ exports.getPendingRequests = async (req, res) => {
   }
 };
 
+// Get Sent Requests (requests I sent that are pending)
+exports.getSentRequests = async (req, res) => {
+  try {
+    const currentUserId = req.user.userId;
+    
+    const sentRequests = await Follower.find({
+      follower: currentUserId,
+      status: 'pending'
+    }).populate('following', 'fullName email photoUrl');
+
+    const requestsWithUsername = await Promise.all(sentRequests.map(async (r) => {
+        const user = r.following;
+        if (!user) return null;
+
+        const profile = await UserProfile.findOne({ user_id: user._id }).select('username');
+        return {
+            ...user.toObject(),
+            username: profile ? profile.username : null
+        };
+    }));
+
+    res.json(requestsWithUsername.filter(Boolean));
+  } catch (error) {
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 // Search Users to Follow
 exports.searchUsers = async (req, res) => {
   try {
     const { query } = req.query;
     const currentUserId = req.user.userId;
 
-    if (!query) return res.json([]);
+    let filter = {
+      _id: { $ne: currentUserId } // Exclude self
+    };
 
-    const users = await User.find({
-      $or: [
+    // If query is provided, search for matching users
+    if (query && query.trim()) {
+      filter.$or = [
         { fullName: { $regex: query, $options: 'i' } },
         { email: { $regex: query, $options: 'i' } }
-      ],
-      _id: { $ne: currentUserId } // Exclude self
-    }).select('fullName email photoUrl');
+      ];
+    }
 
-    // Add follow status and username to each user
+    // Get all users matching the filter
+    const users = await User.find(filter).select('fullName email photoUrl _id');
+
+    // Add follow status and filter by visibility (only public profiles)
     const usersWithStatus = await Promise.all(users.map(async (user) => {
+      const profile = await UserProfile.findOne({ user_id: user._id }).select('username visibility');
+      
+      // Skip if profile is private (only show public profiles)
+      if (profile && profile.visibility === 'private') {
+        return null;
+      }
+
       const follow = await Follower.findOne({
         follower: currentUserId,
         following: user._id
       });
-      
-      const profile = await UserProfile.findOne({ user_id: user._id }).select('username');
 
       return {
         ...user.toObject(),
@@ -221,7 +258,7 @@ exports.searchUsers = async (req, res) => {
       };
     }));
 
-    res.json(usersWithStatus);
+    res.json(usersWithStatus.filter(Boolean));
   } catch (error) {
     res.status(500).json({ message: "Server error" });
   }
