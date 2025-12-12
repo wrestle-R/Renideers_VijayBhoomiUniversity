@@ -114,7 +114,6 @@ export function UserSidebar() {
             </div>
           )}
 
-<<<<<<< HEAD
           {/* Theme Toggle */}
           <div className="p-4 border-b border-sidebar-border">
             <ThemeToggle
@@ -123,8 +122,6 @@ export function UserSidebar() {
             />
           </div>
 
-=======
->>>>>>> cd8e5387831eb6f646041f51a01040e199883a3d
           {/* Logout Button */}
           <div className="p-4">
             <Button
