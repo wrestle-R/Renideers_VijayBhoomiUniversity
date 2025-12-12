@@ -68,6 +68,23 @@ const UserProfile = () => {
                 <p className="capitalize text-foreground">{profile.experienceLevel}</p>
               </div>
             </div>
+
+            <div className="my-4">
+              <h3 className="font-semibold mb-2">Earned Badges</h3>
+              <div className="flex gap-2 flex-wrap">
+                {badges.length === 0 && <span className="text-muted-foreground">No badges yet.</span>}
+                {badges.map(badge => (
+                  <span
+                    key={badge._id}
+                    title={badge.description}
+                    className="inline-flex flex-col items-center px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-semibold"
+                  >
+                    <span className="text-xl">{badge.icon}</span>
+                    {badge.name}
+                  </span>
+                ))}
+              </div>
+            </div>
           </CardContent>
         </Card>
       </div>

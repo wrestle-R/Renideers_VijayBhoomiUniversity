@@ -87,7 +87,9 @@ exports.getProfile = async (req, res) => {
       query = { username: userId };
     }
 
-    const profile = await Profile.findOne(query).populate('user_id', 'fullName email photoUrl');
+    const profile = await Profile.findOne(query)
+    .populate('user_id', 'fullName email photoUrl')
+    .populate('badges');
     
     if (!profile) {
       // If we searched by username and failed, maybe it was an ID that looked like a username? Unlikely if we check isValid.

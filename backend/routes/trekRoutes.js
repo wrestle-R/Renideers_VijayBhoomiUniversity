@@ -3,7 +3,39 @@ const router = express.Router();
 const Activity = require('../models/activity');
 const User = require('../models/User');
 const trekController = require('../controllers/trekController');
+const Badge = require('../models/Badge');
 
+// Helper: Find badges user hasn't earned yet
+async function getEarnableBadges(profile) {
+  const allBadges = await Badge.find();
+  const earnedIds = (profile.badges || []).map(b => b.toString());
+  return allBadges.filter(b => !earnedIds.includes(b._id.toString()));
+}
+
+// Call this after marking an activity as completed
+async function checkAndAwardBadges(userId, activity) {
+  const profile = await UserProfile.findOne({ user_id: userId }).populate('badges');
+  if (!profile) return [];
+  const earnable = await getEarnableBadges(profile);
+  const newBadges = [];
+
+  // Example criteria
+  const completedCount = await Activity.countDocuments({ userId, status: 'completed' });
+
+  for (const badge of earnable) {
+    if (badge.code === 'first_trek' && completedCount >= 1) newBadges.push(badge._id);
+    if (badge.code === 'ten_treks' && completedCount >= 10) newBadges.push(badge._id);
+    if (badge.code === 'mountain_goat' && activity.altitude > 2000) newBadges.push(badge._id);
+    // Add more criteria as needed
+  }
+
+  if (newBadges.length > 0) {
+    profile.badges = [...(profile.badges || []), ...newBadges];
+    await profile.save();
+  }
+
+  return Badge.find({ _id: { $in: newBadges } });
+}
 // Create new trek session
 router.post('/start', async (req, res) => {
   try {
@@ -193,6 +225,8 @@ router.post('/:trekId/complete', async (req, res) => {
 
     await activity.save();
 
+    const newBadges = await checkAndAwardBadges(activity.userId, activity);
+
     res.json({
       success: true,
       activity: {
@@ -205,6 +239,7 @@ router.post('/:trekId/complete', async (req, res) => {
         summary: activity.summary,
         path: activity.path,
       },
+      newBadges,
     });
   } catch (error) {
     console.error('Error completing trek:', error);
