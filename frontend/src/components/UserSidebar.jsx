@@ -26,6 +26,7 @@ export function UserSidebar() {
     { icon: Camera, label: "Trek AI", path: "/trek-ai" },
     { icon: Mountain, label: "Treks", path: "/treks" },
     { icon: Users, label: "Clubs", path: "/clubs" },
+    { icon: Camera, label: "Trek Vision", path: "/trek-ai" },
     { icon: Users, label:"Badges", path:"/badges"},
   ];
 
@@ -113,6 +114,17 @@ export function UserSidebar() {
             </div>
           )}
 
+<<<<<<< HEAD
+          {/* Theme Toggle */}
+          <div className="p-4 border-b border-sidebar-border">
+            <ThemeToggle
+              showLabel={true}
+              className="w-full justify-start text-sidebar-foreground hover:text-primary hover:bg-primary/5"
+            />
+          </div>
+
+=======
+>>>>>>> cd8e5387831eb6f646041f51a01040e199883a3d
           {/* Logout Button */}
           <div className="p-4">
             <Button
