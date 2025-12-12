@@ -153,7 +153,7 @@ function AppRoutes() {
         } 
       />
       <Route 
-        path="/:username" 
+        path="/badges" 
         element={
           <ProtectedRoute>
             <Badges />

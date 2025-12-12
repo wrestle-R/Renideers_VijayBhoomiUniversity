@@ -26,12 +26,14 @@ const io = initSocket(server);
 const PORT = process.env.PORT || 8000;
 
 // ---------- MIDDLEWARE ----------
-// app.use(
-//   cors({
-//     origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173' || 'http://localhost:5174',
-//     credentials: true,
-//   })
-// );
+app.use(
+  cors({
+    origin: [
+      process.env.FRONTEND_ORIGIN, 'http://localhost:5173', 'http://localhost:5174'
+    ],
+    credentials: true,
+  })
+);
 
 app.use(express.json({ limit: '10mb' }));
 app.use(cookieParser());
