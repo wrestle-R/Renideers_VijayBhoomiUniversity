@@ -49,7 +49,10 @@ export const Navbar = () => {
               </div>
             </div>
 
+<<<<<<< HEAD
            
+=======
+>>>>>>> 4a76e09959444f3b0e08b8490af1ba2385e8b2db
 
             {/* RIGHT SIDE: mobile dropdown + auth buttons */}
             <div

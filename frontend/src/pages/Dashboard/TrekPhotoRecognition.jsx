@@ -225,7 +225,7 @@ const TrekPhotoRecognition = () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
         console.error('[identifySpeciesWithClaude] API Error Response:', errorData);
-        throw new Error(`API error (${response.status}): ${errorData.error || response.statusText}`);
+        throw new Error(errorData.error || `API error (${response.status})`);
       }
 
       const result = await response.json();
@@ -240,7 +240,7 @@ const TrekPhotoRecognition = () => {
       
       if (!result || !result.species || result.species === 'unknown') {
         console.warn('[identifySpeciesWithClaude] No species identified or unknown species');
-        return null;
+        return result; // Return the result even if unknown, so we can handle it
       }
       
       return result;
@@ -251,7 +251,7 @@ const TrekPhotoRecognition = () => {
         name: error.name,
         error: error
       });
-      return null;
+      throw error; // Re-throw to be handled by analyzeImage
     }
   };
 
@@ -276,7 +276,7 @@ const TrekPhotoRecognition = () => {
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({ error: 'Failed to parse error response' }));
         console.error('[getSpeciesDetails] API Error Response:', errorData);
-        throw new Error(`API error (${response.status}): ${errorData.error || response.statusText}`);
+        throw new Error(errorData.error || `API error (${response.status})`);
       }
 
       const details = await response.json();
@@ -284,17 +284,9 @@ const TrekPhotoRecognition = () => {
       console.log('[getSpeciesDetails] Full details object:', details);
       console.log('[getSpeciesDetails] Details summary:', {
         scientificName: details.scientificName || 'N/A',
-        commonNames: details.commonNames?.length || 0,
-        hasDescription: !!details.description,
         hasHabitat: !!details.habitat,
         hasDistribution: !!details.distribution,
-        hasBehavior: !!details.behavior,
-        hasDiet: !!details.diet,
-        interestingFacts: details.interestingFacts?.length || 0,
         safetyTips: details.safetyTips?.length || 0,
-        isThreatened: details.isThreatened || false,
-        isVenomous: details.isVenomous || false,
-        isPoisonous: details.isPoisonous || false
       });
       return details;
     } catch (error) {
@@ -304,7 +296,7 @@ const TrekPhotoRecognition = () => {
         name: error.name,
         error: error
       });
-      return null;
+      throw error;
     }
   };
 
@@ -453,6 +445,22 @@ const TrekPhotoRecognition = () => {
                 <Loader className="animate-spin text-primary" size={32} />
                 <h3 className="text-base font-semibold text-foreground m-0">Analyzing Image...</h3>
                 <p className="text-sm text-muted-foreground m-0">Identifying species and gathering details</p>
+              </div>
+            )}
+
+            {error && (
+              <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-4 flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <AlertTriangle size={18} className="text-red-600 dark:text-red-400" />
+                  <p className="text-sm text-red-800 dark:text-red-300 m-0">{error}</p>
+                </div>
+                <button 
+                  className="self-start inline-flex items-center gap-2 bg-secondary text-secondary-foreground rounded-full px-5 py-2.5 text-sm font-medium hover:bg-secondary/80 transition-colors mt-2"
+                  onClick={resetApp}
+                >
+                  <RefreshCw size={16} />
+                  <span>Try Again</span>
+                </button>
               </div>
             )}
 

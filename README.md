@@ -1,4 +1,3 @@
-
 <div align="center">
 
 # Trekky — VijayBhoomi University
@@ -25,7 +24,7 @@
 
 ## Overview
 
-This repository contains a web & mobile platform for managing treks and online experiments used by VijayBhoomi University. The project is split into three main parts:
+Trekky is a hackathon-born platform for planning, sharing, and running treks and related experiments. Created for VijayBhoomi University hackathon, it provides web and mobile apps that help participants, organizers, and researchers collaborate. The project is split into three main parts:
 
 ```
 Renideers_VijayBhoomiUniversity/
