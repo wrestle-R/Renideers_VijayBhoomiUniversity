@@ -36,6 +36,7 @@ const ProfileSchema = new mongoose.Schema({
     },
     preferredActivities: [{ type: String, trim: true }], // e.g. ['day-hike','multi-day','trail-running']
     preferredTrails: [PreferredTrailSchema],
+    badges: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Badge' }],
 
     // rewards & verification metadata
     rewards: {

@@ -27,6 +27,8 @@ export function UserSidebar() {
     { icon: Mountain, label: "Treks", path: "/treks" },
     { icon: Users, label: "Clubs", path: "/clubs" },
     
+    { icon: Camera, label: "Trek Vision", path: "/trek-ai" },
+    { icon: Users, label:"Badges", path:"/badges"},
   ];
 
   const isActive = (path) => location.pathname === path;

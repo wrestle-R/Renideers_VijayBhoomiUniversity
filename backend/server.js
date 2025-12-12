@@ -15,6 +15,7 @@ const clubRoutes = require('./routes/clubRoutes');
 const aiRoutes = require('./routes/aiRoutes');        
 const activityRoutes = require('./routes/activityRoutes');
 const trekPhotoRoutes = require('./routes/trekPhotoRoutes');
+const badgeRoutes = require('./routes/badgeRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -27,7 +28,9 @@ const PORT = process.env.PORT || 8000;
 // ---------- MIDDLEWARE ----------
 app.use(
   cors({
-    origin: process.env.FRONTEND_ORIGIN || 'http://localhost:5173',
+    origin: [
+      process.env.FRONTEND_ORIGIN, 'http://localhost:5173', 'http://localhost:5174'
+    ],
     credentials: true,
   })
 );
@@ -42,6 +45,7 @@ app.use('/api/treks', trekRoutes);
 app.use('/api/clubs', clubRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/badges', badgeRoutes);
 app.use('/api', trekPhotoRoutes);
 
 // ---------- DB & SERVER ----------
