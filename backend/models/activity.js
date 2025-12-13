@@ -32,6 +32,11 @@ const ActivitySchema = new mongoose.Schema({
     required: true,
     index: true,
   },
+  clubId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Club',
+    index: true,
+  },
   title: {
     type: String,
     default: 'My Activity',

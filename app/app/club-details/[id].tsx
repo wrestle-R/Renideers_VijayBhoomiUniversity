@@ -4,6 +4,7 @@ import { ThemedView } from '@/components/themed-view';
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useAuth } from '@/context/AuthContext';
+import { useTrek } from '@/context/TrekContext';
 import { Ionicons } from '@expo/vector-icons';
 import axios from 'axios';
 import Constants from 'expo-constants';
@@ -24,9 +25,14 @@ export default function ClubDetailsScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams();
   const { user } = useAuth();
+  const { startClubTrek, joinClubTrek, currentTrek, isTracking } = useTrek();
   const [club, setClub] = useState<Club | null>(null);
   const [loading, setLoading] = useState(true);
   const [isJoining, setIsJoining] = useState(false);
+  const [isStartingTrek, setIsStartingTrek] = useState(false);
+  const [isJoiningTrek, setIsJoiningTrek] = useState(false);
+  const [activeTrek, setActiveTrek] = useState<any>(null);
+  const [checkingTrek, setCheckingTrek] = useState(false);
 
   const primaryColor = useThemeColor({}, 'primary');
   const cardColor = useThemeColor({}, 'card');
@@ -39,6 +45,11 @@ export default function ClubDetailsScreen() {
 
   useEffect(() => {
     fetchClub();
+    fetchActiveTrek();
+    
+    // Poll for active trek every 10 seconds
+    const interval = setInterval(fetchActiveTrek, 10000);
+    return () => clearInterval(interval);
   }, [id]);
 
   const fetchClub = async () => {
@@ -51,6 +62,22 @@ export default function ClubDetailsScreen() {
       Alert.alert('Error', 'Failed to load club details');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchActiveTrek = async () => {
+    if (!id) return;
+    try {
+      setCheckingTrek(true);
+      const response = await axios.get(`${apiUrl}/api/clubs/${id}/active-trek`);
+      setActiveTrek(response.data);
+      if (response.data.isActive) {
+        console.log('🔴 ACTIVE CLUB TREK:', response.data);
+      }
+    } catch (error) {
+      console.error('Error fetching active trek:', error);
+    } finally {
+      setCheckingTrek(false);
     }
   };
 
@@ -109,6 +136,82 @@ export default function ClubDetailsScreen() {
     ]);
   };
 
+  const handleStartClubTrek = async () => {
+    if (!user || !club) return;
+    
+    Alert.alert(
+      'Start Club Trek',
+      'This will start a new club trek session. All members will be able to join and their locations will be tracked.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Start',
+          onPress: async () => {
+            setIsStartingTrek(true);
+            try {
+              // Start the club trek using TrekContext
+              await startClubTrek(club._id, club.name);
+              Alert.alert('Success!', 'Club trek started! Members can now join.');
+              // Refresh active trek info
+              await fetchActiveTrek();
+            } catch (error: any) {
+              console.error('Error starting club trek:', error);
+              Alert.alert('Error', error.response?.data?.message || 'Failed to start club trek');
+            } finally {
+              setIsStartingTrek(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleJoinClubTrek = async () => {
+    if (!user || !club) return;
+
+    if (!isTracking || !currentTrek) {
+      Alert.alert(
+        'Start Trek First',
+        'You need to start tracking your trek before joining the club trek. Start a trek now?',
+        [
+          { text: 'Cancel', style: 'cancel' },
+          {
+            text: 'Start Trek',
+            onPress: () => {
+              // Navigate to trek screen to start
+              router.push('/(tabs)');
+            },
+          },
+        ]
+      );
+      return;
+    }
+
+    Alert.alert(
+      'Join Club Trek',
+      `Join ${activeTrek.leaderName}'s club trek? Your location will be shared with the group.`,
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Join',
+          onPress: async () => {
+            setIsJoiningTrek(true);
+            try {
+              await joinClubTrek(club._id);
+              Alert.alert('Success!', `You've joined the club trek! Your location is now being shared.`);
+              await fetchActiveTrek();
+            } catch (error: any) {
+              console.error('Error joining club trek:', error);
+              Alert.alert('Error', error.response?.data?.message || 'Failed to join club trek');
+            } finally {
+              setIsJoiningTrek(false);
+            }
+          },
+        },
+      ]
+    );
+  };
+
   if (loading) {
     return (
       <ThemedView style={styles.container}>
@@ -126,6 +229,7 @@ export default function ClubDetailsScreen() {
   }
 
   const isMember = club.members?.some(m => m._id === user?.mongo_uid);
+  const isCreator = club.creator._id === user?.mongo_uid;
 
   return (
     <ThemedView style={styles.container}>
@@ -140,7 +244,10 @@ export default function ClubDetailsScreen() {
         </View>
 
         {/* Club Image */}
-        <Image source={{ uri: club.photoUrl }} style={styles.clubImage} />
+        <Image 
+          source={club.photoUrl ? { uri: club.photoUrl } : require('@/assets/images/react-logo.png')} 
+          style={styles.clubImage} 
+        />
 
         {/* Club Info Card */}
         <View style={[styles.infoCard, { backgroundColor: cardColor as string, borderColor: borderColor as string }]}>
@@ -159,7 +266,10 @@ export default function ClubDetailsScreen() {
 
           {/* Creator Info */}
           <View style={[styles.creatorSection, { backgroundColor: mutedColor as string }]}>
-            <Image source={{ uri: club.creator.photoUrl }} style={styles.creatorAvatar} />
+            <Image 
+              source={club.creator.photoUrl ? { uri: club.creator.photoUrl } : require('@/assets/images/react-logo.png')} 
+              style={styles.creatorAvatar} 
+            />
             <View>
               <ThemedText style={styles.creatorLabel}>Created by</ThemedText>
               <ThemedText style={styles.creatorName}>{club.creator.fullName}</ThemedText>
@@ -178,7 +288,10 @@ export default function ClubDetailsScreen() {
             <View style={styles.membersList}>
               {club.members?.map((member) => (
                 <View key={member._id} style={styles.memberItem}>
-                  <Image source={{ uri: member.photoUrl }} style={styles.memberAvatar} />
+                  <Image 
+                    source={member.photoUrl ? { uri: member.photoUrl } : require('@/assets/images/react-logo.png')} 
+                    style={styles.memberAvatar} 
+                  />
                   <ThemedText style={styles.memberName} numberOfLines={1}>
                     {member.fullName}
                   </ThemedText>
@@ -186,6 +299,93 @@ export default function ClubDetailsScreen() {
               ))}
             </View>
           </View>
+
+          {/* Active Club Trek Banner - Show to all members */}
+          {activeTrek?.isActive && (
+            <View style={[styles.activeTrekBanner, { backgroundColor: '#10b981', borderColor: '#059669' }]}>
+              <View style={styles.activeTrekHeader}>
+                <View style={styles.pulsingDot} />
+                <ThemedText style={styles.activeTrekTitle}>🏃 Club Trek Active!</ThemedText>
+              </View>
+              <ThemedText style={styles.activeTrekText}>
+                {activeTrek.leaderName} started a club trek
+              </ThemedText>
+              <ThemedText style={styles.activeTrekMembers}>
+                👥 {activeTrek.memberCount} member{activeTrek.memberCount !== 1 ? 's' : ''} tracking
+              </ThemedText>
+              
+              {/* Join button for non-leader members */}
+              {!isCreator && isMember && (
+                <TouchableOpacity
+                  style={[styles.joinTrekButton, { opacity: isJoiningTrek ? 0.6 : 1 }]}
+                  onPress={handleJoinClubTrek}
+                  disabled={isJoiningTrek}
+                >
+                  {isJoiningTrek ? (
+                    <ActivityIndicator color="#10b981" />
+                  ) : (
+                    <>
+                      <Ionicons name="add-circle" size={20} color="#10b981" style={{ marginRight: 8 }} />
+                      <ThemedText style={styles.joinTrekButtonText}>
+                        Join Club Trek
+                      </ThemedText>
+                    </>
+                  )}
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
+
+          {/* Leader Controls - Start Club Trek Button */}
+          {isCreator && (
+            <View style={styles.leaderSection}>
+              <View style={styles.leaderBadge}>
+                <Ionicons name="shield-checkmark" size={16} color={primaryColor as string} />
+                <ThemedText style={styles.leaderLabel}>Leader Controls</ThemedText>
+              </View>
+              <TouchableOpacity
+                style={[
+                  styles.startTrekButton,
+                  {
+                    backgroundColor: primaryColor as string,
+                    opacity: isStartingTrek || (currentTrek && currentTrek.status === 'active') ? 0.6 : 1,
+                  },
+                ]}
+                onPress={handleStartClubTrek}
+                disabled={isStartingTrek || !!(currentTrek && currentTrek.status === 'active')}
+              >
+                {isStartingTrek ? (
+                  <ActivityIndicator color="#fff" />
+                ) : (
+                  <>
+                    <Ionicons
+                      name="rocket"
+                      size={20}
+                      color="#fff"
+                      style={{ marginRight: 8 }}
+                    />
+                    <ThemedText style={styles.startTrekButtonText}>
+                      {currentTrek && currentTrek.status === 'active' ? 'Trek Already Active' : 'Start Club Trek'}
+                    </ThemedText>
+                  </>
+                )}
+              </TouchableOpacity>
+              <ThemedText style={styles.leaderHint}>
+                Start a trek session and members can join to share locations
+              </ThemedText>
+
+              {/* Open Live Dashboard */}
+              {(activeTrek?.isActive || (currentTrek && currentTrek.status === 'active')) && (
+                <TouchableOpacity
+                  style={[styles.startTrekButton, { backgroundColor: '#111827', marginTop: 8 }]}
+                  onPress={() => router.push(`/club-trek-dashboard/${club._id}`)}
+                >
+                  <Ionicons name="analytics" size={18} color="#fff" style={{ marginRight: 8 }} />
+                  <ThemedText style={styles.startTrekButtonText}>Open Live Dashboard</ThemedText>
+                </TouchableOpacity>
+              )}
+            </View>
+          )}
 
           {/* Action Button */}
           <TouchableOpacity
@@ -344,5 +544,89 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: '600',
+  },
+  leaderSection: {
+    marginTop: 16,
+    paddingTop: 16,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(128, 128, 128, 0.2)',
+  },
+  leaderBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 12,
+  },
+  leaderLabel: {
+    fontSize: 14,
+    fontWeight: '700',
+    opacity: 0.9,
+  },
+  startTrekButton: {
+    flexDirection: 'row',
+    paddingVertical: 14,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  startTrekButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  leaderHint: {
+    fontSize: 12,
+    opacity: 0.6,
+    textAlign: 'center',
+    fontStyle: 'italic',
+  },
+  activeTrekBanner: {
+    marginTop: 16,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 2,
+  },
+  activeTrekHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  pulsingDot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#fff',
+    marginRight: 8,
+  },
+  activeTrekTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  activeTrekText: {
+    fontSize: 14,
+    color: '#fff',
+    marginBottom: 4,
+    opacity: 0.95,
+  },
+  activeTrekMembers: {
+    fontSize: 13,
+    color: '#fff',
+    marginBottom: 12,
+    opacity: 0.9,
+  },
+  joinTrekButton: {
+    flexDirection: 'row',
+    paddingVertical: 12,
+    borderRadius: 8,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+  },
+  joinTrekButtonText: {
+    color: '#10b981',
+    fontSize: 15,
+    fontWeight: '700',
   },
 });

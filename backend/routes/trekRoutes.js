@@ -220,6 +220,12 @@ router.post('/:trekId/complete', async (req, res) => {
 
     activity.complete();
 
+    // Clear clubId if this was a club trek
+    if (activity.clubId) {
+      console.log(`🛑 Clearing clubId ${activity.clubId} from completed activity ${trekId}`);
+      activity.clubId = undefined;
+    }
+
     // Add optional metadata
     if (notes) activity.notes = notes;
     if (difficulty) activity.difficulty = difficulty;

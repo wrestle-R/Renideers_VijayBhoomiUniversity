@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
-import { Platform } from 'react-native';
+import { Platform, AppState, AppStateStatus } from 'react-native';
 import * as Location from 'expo-location';
 import { Pedometer } from 'expo-sensors';
 import axios from 'axios';
@@ -51,7 +51,7 @@ type TrekContextValue = {
   currentTrek: Trek | null;
   metrics: TrekMetrics;
   path: LocationPoint[];
-  startTrek: (title?: string) => Promise<void>;
+  startTrek: (title?: string, clubId?: string) => Promise<Trek | undefined>;
   pauseTrek: () => Promise<void>;
   resumeTrek: () => Promise<void>;
   stopTrek: (notes?: string) => Promise<Trek | null>;
@@ -67,6 +67,9 @@ type TrekContextValue = {
   };
   triggerManualSOS: () => Promise<void>;
   cancelSOSTimer: () => void;
+  // Club Trek functionality
+  startClubTrek: (clubId: string, title?: string) => Promise<void>;
+  joinClubTrek: (clubId: string) => Promise<void>;
 };
 
 const TrekContext = createContext<TrekContextValue | undefined>(undefined);
@@ -295,6 +298,8 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
       startTimeRef.current = Date.now();
       totalPausedTimeRef.current = 0;
 
+      console.log('✅ Trek started successfully with ID:', trek._id);
+
       // Initialize first location point
       const initialPoint: LocationPoint = {
         latitude: initialLoc.coords.latitude,
@@ -513,6 +518,7 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
       startFallDetection();
 
       console.log('✅ Trek started successfully:', trek._id);
+      return trek; // Return the trek object for club trek association
     } catch (err: any) {
       console.error('❌ Error starting trek:', err);
       setError(err.message || 'Failed to start trek');
@@ -902,6 +908,105 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }, []);
 
+  // Auto-stop trek when app goes to background or closes
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', async (nextAppState: AppStateStatus) => {
+      // When app moves to background and a trek is active
+      if (nextAppState === 'background' && isTracking && currentTrek) {
+        console.log('📱 App going to background - Auto-stopping trek');
+        try {
+          await stopTrek('Auto-stopped when app closed');
+        } catch (error) {
+          console.error('❌ Error auto-stopping trek:', error);
+        }
+      }
+    });
+
+    return () => {
+      subscription?.remove();
+    };
+  }, [isTracking, currentTrek]);
+
+  // ==================== CLUB TREK FUNCTIONS ====================
+
+  /**
+   * Start a club trek (leader only)
+   * Creates a trek and associates it with a club
+   */
+  const startClubTrek = async (clubId: string, title?: string) => {
+    try {
+      // First, start a regular trek and get the activity
+      const trek = await startTrek(title || `Club Trek ${new Date().toLocaleDateString()}`);
+      
+      // Get the activity ID from the returned trek
+      const activityId = trek?._id;
+      if (!activityId) {
+        throw new Error('Failed to get activity ID after starting trek');
+      }
+      
+      console.log('🚀 Starting club trek with activity ID:', activityId);
+
+      // Associate trek with club
+      const response = await axios.post(
+        `${apiUrl}/api/clubs/${clubId}/start-trek`,
+        { activityId },
+        { headers: { 'x-user-id': user?.mongo_uid } }
+      );
+
+      if (response.data.success) {
+        console.log('✅ Club trek started successfully:', clubId);
+        console.log('📊 Activity ID:', activityId);
+        console.log('📢 Members can now join this club trek');
+        // TODO: Send notifications to club members
+      } else {
+        console.error('❌ Failed to start club trek:', response.data.error);
+        setError(response.data.error);
+        throw new Error(response.data.error);
+      }
+    } catch (err: any) {
+      console.error('❌ Error starting club trek:', err);
+      setError(err.message || 'Failed to start club trek');
+      throw err;
+    }
+  };
+
+  /**
+   * Join an active club trek (members only)
+   * Associates current trek with club's active trek
+   */
+  const joinClubTrek = async (clubId: string) => {
+    try {
+      if (!currentTrek || !currentTrek._id) {
+        throw new Error('Start a trek first before joining club trek');
+      }
+
+      console.log('🚶 Attempting to join club trek:', clubId);
+      console.log('📊 My activity ID:', currentTrek._id);
+
+      const response = await axios.post(
+        `${apiUrl}/api/clubs/${clubId}/join-trek`,
+        { activityId: currentTrek._id },
+        { headers: { 'x-user-id': user?.mongo_uid } }
+      );
+
+      if (response.data.success) {
+        console.log('✅ Successfully joined club trek:', clubId);
+        console.log('📍 Your location is now being shared with the group');
+      } else {
+        console.error('❌ Failed to join club trek:', response.data.error);
+        setError(response.data.error);
+        throw new Error(response.data.error);
+      }
+    } catch (err: any) {
+      console.error('❌ Error joining club trek:', err);
+      const errorMsg = err.response?.data?.error || err.message || 'Failed to join club trek';
+      setError(errorMsg);
+      throw new Error(errorMsg);
+    }
+  };
+
+  // ==================== END CLUB TREK FUNCTIONS ====================
+
   return (
     <TrekContext.Provider
       value={{
@@ -920,6 +1025,8 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sosState,
         triggerManualSOS,
         cancelSOSTimer,
+        startClubTrek,
+        joinClubTrek,
       }}
     >
       {children}

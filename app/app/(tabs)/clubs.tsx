@@ -94,8 +94,27 @@ export default function ClubsScreen() {
       setShowCreateForm(false);
       alert('Club created successfully!');
     } catch (error: any) {
+      // Improved error handling for network/validation issues
       console.error('Error creating club:', error);
-      alert(error.response?.data?.message || 'Failed to create club');
+
+      const isAxiosError = !!error.isAxiosError;
+      if (isAxiosError && !error.response) {
+        // Network error (server not reachable)
+        alert(`Network error: could not reach API at ${apiUrl}. Is the backend running?`);
+      } else if (isAxiosError && error.response) {
+        // Server returned an error response
+        const msg = error.response?.data?.message || error.response?.data?.error || JSON.stringify(error.response.data);
+        alert(`Failed to create club: ${msg}`);
+      } else {
+        // Unknown error
+        alert(error.message || 'Failed to create club');
+      }
+
+      // Helpful console dump for debugging
+      if (error.response) {
+        console.error('Response data:', error.response.data);
+        console.error('Response status:', error.response.status);
+      }
     } finally {
       setCreatingClub(false);
     }
@@ -113,7 +132,7 @@ export default function ClubsScreen() {
         onPress={() => router.push(`/club-details/${item._id}`)}
       >
         <Image
-          source={{ uri: item.photoUrl }}
+          source={item.photoUrl ? { uri: item.photoUrl } : require('@/assets/images/react-logo.png')}
           style={styles.clubImage}
         />
         <View style={styles.clubContent}>
