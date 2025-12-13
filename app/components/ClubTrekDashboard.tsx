@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, RefreshControl, Alert } from 'react-native';
 import { useAuth } from '../context/AuthContext';
+import { useThemeColor } from '../hooks/use-theme-color';
 import axios from 'axios';
 import { Ionicons } from '@expo/vector-icons';
 
@@ -56,6 +57,15 @@ export default function ClubTrekDashboard({ clubId }: { clubId: string }) {
   const [loading, setLoading] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [autoRefresh, setAutoRefresh] = useState(true);
+
+  // Theme colors
+  const backgroundColor = useThemeColor({}, 'background');
+  const foregroundColor = useThemeColor({}, 'foreground');
+  const cardColor = useThemeColor({}, 'card');
+  const primaryColor = useThemeColor({}, 'primary');
+  const mutedColor = useThemeColor({}, 'muted');
+  const mutedForegroundColor = useThemeColor({}, 'mutedForeground');
+  const borderColor = useThemeColor({}, 'border');
 
   const fetchAnalysis = async () => {
     try {
@@ -199,32 +209,32 @@ export default function ClubTrekDashboard({ clubId }: { clubId: string }) {
 
   if (loading && !analysis) {
     return (
-      <View style={styles.centerContainer}>
-        <Text style={styles.loadingText}>Loading club trek data...</Text>
+      <View style={[styles.centerContainer, { backgroundColor: backgroundColor as string }]}>
+        <Text style={[styles.loadingText, { color: mutedForegroundColor as string }]}>Loading club trek data...</Text>
       </View>
     );
   }
 
   if (!analysis || !analysis.isActive || !analysis.groupMetrics || !analysis.summary) {
     return (
-      <View style={styles.centerContainer}>
-        <Ionicons name="information-circle-outline" size={64} color="#6B7280" />
-        <Text style={styles.infoText}>No active club trek</Text>
-        <Text style={styles.subInfoText}>Start a trek to see live analytics</Text>
+      <View style={[styles.centerContainer, { backgroundColor: backgroundColor as string }]}>
+        <Ionicons name="information-circle-outline" size={64} color={mutedForegroundColor as string} />
+        <Text style={[styles.infoText, { color: foregroundColor as string }]}>No active club trek</Text>
+        <Text style={[styles.subInfoText, { color: mutedForegroundColor as string }]}>Start a trek to see live analytics</Text>
       </View>
     );
   }
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: backgroundColor as string }]}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={primaryColor as string} />
       }
     >
       {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Live Club Trek Dashboard</Text>
+      <View style={[styles.header, { backgroundColor: cardColor as string, borderBottomColor: borderColor as string }]}>
+        <Text style={[styles.title, { color: foregroundColor as string }]}>Live Club Trek Dashboard</Text>
         <TouchableOpacity
           onPress={() => setAutoRefresh(!autoRefresh)}
           style={styles.autoRefreshButton}
@@ -232,44 +242,44 @@ export default function ClubTrekDashboard({ clubId }: { clubId: string }) {
           <Ionicons
             name={autoRefresh ? 'sync' : 'sync-outline'}
             size={20}
-            color={autoRefresh ? '#10B981' : '#6B7280'}
+            color={autoRefresh ? primaryColor as string : mutedForegroundColor as string}
           />
-          <Text style={[styles.autoRefreshText, autoRefresh && styles.autoRefreshActiveText]}>
+          <Text style={[styles.autoRefreshText, { color: autoRefresh ? primaryColor as string : mutedForegroundColor as string }]}>
             {autoRefresh ? 'Auto' : 'Manual'}
           </Text>
         </TouchableOpacity>
       </View>
 
       {/* Group Summary */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Group Summary</Text>
+      <View style={[styles.card, { backgroundColor: cardColor as string }]}>
+        <Text style={[styles.cardTitle, { color: foregroundColor as string }]}>Group Summary</Text>
         <View style={styles.summaryGrid}>
           <View style={styles.summaryItem}>
-            <Text style={styles.summaryValue}>{analysis.groupMetrics?.totalMembers || 0}</Text>
-            <Text style={styles.summaryLabel}>Active</Text>
+            <Text style={[styles.summaryValue, { color: foregroundColor as string }]}>{analysis.groupMetrics?.totalMembers || 0}</Text>
+            <Text style={[styles.summaryLabel, { color: mutedForegroundColor as string }]}>Active</Text>
           </View>
           <View style={styles.summaryItem}>
             <Text style={[styles.summaryValue, { color: '#10B981' }]}>
               {analysis.summary?.onPace || 0}
             </Text>
-            <Text style={styles.summaryLabel}>On Pace</Text>
+            <Text style={[styles.summaryLabel, { color: mutedForegroundColor as string }]}>On Pace</Text>
           </View>
           <View style={styles.summaryItem}>
             <Text style={[styles.summaryValue, { color: '#F59E0B' }]}>
               {analysis.summary?.lagging || 0}
             </Text>
-            <Text style={styles.summaryLabel}>Lagging</Text>
+            <Text style={[styles.summaryLabel, { color: mutedForegroundColor as string }]}>Lagging</Text>
           </View>
           <View style={styles.summaryItem}>
             <Text style={[styles.summaryValue, { color: '#EF4444' }]}>
               {analysis.summary?.tired || 0}
             </Text>
-            <Text style={styles.summaryLabel}>Tired</Text>
+            <Text style={[styles.summaryLabel, { color: mutedForegroundColor as string }]}>Tired</Text>
           </View>
         </View>
-        <View style={styles.metricRow}>
-          <Text style={styles.metricLabel}>Avg Speed:</Text>
-          <Text style={styles.metricValue}>
+        <View style={[styles.metricRow, { borderTopColor: borderColor as string }]}>
+          <Text style={[styles.metricLabel, { color: mutedForegroundColor as string }]}>Avg Speed:</Text>
+          <Text style={[styles.metricValue, { color: foregroundColor as string }]}>
             {formatSpeed(analysis.groupMetrics?.avgSpeed || 0)}
           </Text>
         </View>
@@ -277,17 +287,17 @@ export default function ClubTrekDashboard({ clubId }: { clubId: string }) {
 
       {/* Alerts */}
       {analysis.alerts && analysis.alerts.length > 0 && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>⚠️ Alerts</Text>
+        <View style={[styles.card, { backgroundColor: cardColor as string }]}>
+          <Text style={[styles.cardTitle, { color: foregroundColor as string }]}>⚠️ Alerts</Text>
           {analysis.alerts.map((alert, index) => (
             <View
               key={index}
               style={[
                 styles.alertItem,
-                { borderLeftColor: getSeverityColor(alert.severity) },
+                { borderLeftColor: getSeverityColor(alert.severity), backgroundColor: mutedColor as string },
               ]}
             >
-              <Text style={styles.alertText}>{alert.message}</Text>
+              <Text style={[styles.alertText, { color: foregroundColor as string }]}>{alert.message}</Text>
             </View>
           ))}
         </View>
@@ -295,21 +305,21 @@ export default function ClubTrekDashboard({ clubId }: { clubId: string }) {
 
       {/* Suggestions */}
       {analysis.suggestions.length > 0 && (
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>💡 Suggestions</Text>
+        <View style={[styles.card, { backgroundColor: cardColor as string }]}>
+          <Text style={[styles.cardTitle, { color: foregroundColor as string }]}>💡 Suggestions</Text>
           {analysis.suggestions.map((suggestion, index) => (
-            <View key={index} style={styles.suggestionItem}>
-              <Text style={styles.suggestionText}>{suggestion.message}</Text>
+            <View key={index} style={[styles.suggestionItem, { backgroundColor: mutedColor as string }]}>
+              <Text style={[styles.suggestionText, { color: foregroundColor as string }]}>{suggestion.message}</Text>
             </View>
           ))}
         </View>
       )}
 
       {/* Members List */}
-      <View style={styles.card}>
-        <Text style={styles.cardTitle}>Members</Text>
+      <View style={[styles.card, { backgroundColor: cardColor as string }]}>
+        <Text style={[styles.cardTitle, { color: foregroundColor as string }]}>Members</Text>
         {analysis.members.map((member, index) => (
-          <View key={index} style={styles.memberItem}>
+          <View key={index} style={[styles.memberItem, { borderBottomColor: borderColor as string }]}>
             <View style={styles.memberHeader}>
               <View style={styles.memberInfo}>
                 <Ionicons
@@ -317,7 +327,7 @@ export default function ClubTrekDashboard({ clubId }: { clubId: string }) {
                   size={20}
                   color={getClassificationColor(member.classification)}
                 />
-                <Text style={styles.memberName}>{member.name}</Text>
+                <Text style={[styles.memberName, { color: foregroundColor as string }]}>{member.name}</Text>
               </View>
               <View
                 style={[
@@ -337,13 +347,13 @@ export default function ClubTrekDashboard({ clubId }: { clubId: string }) {
             </View>
             {member.classification !== 'LEADER' && (
               <View style={styles.memberStats}>
-                <Text style={styles.memberStat}>
+                <Text style={[styles.memberStat, { color: mutedForegroundColor as string }]}>
                   From Leader: {formatDistance(member.distanceFromLeader)}
                 </Text>
-                <Text style={styles.memberStat}>
+                <Text style={[styles.memberStat, { color: mutedForegroundColor as string }]}>
                   Speed: {formatSpeed(member.avgSpeed)}
                 </Text>
-                <Text style={styles.memberStat}>
+                <Text style={[styles.memberStat, { color: mutedForegroundColor as string }]}>
                   Distance: {formatDistance(member.distance)}
                 </Text>
               </View>
@@ -352,7 +362,7 @@ export default function ClubTrekDashboard({ clubId }: { clubId: string }) {
         ))}
       </View>
 
-      <Text style={styles.timestamp}>
+      <Text style={[styles.timestamp, { color: mutedForegroundColor as string }]}>
         Last updated: {new Date(analysis.timestamp).toLocaleTimeString()}
       </Text>
     </ScrollView>
@@ -362,7 +372,6 @@ export default function ClubTrekDashboard({ clubId }: { clubId: string }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F3F4F6',
   },
   centerContainer: {
     flex: 1,
@@ -372,17 +381,14 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     fontSize: 16,
-    color: '#6B7280',
   },
   infoText: {
     fontSize: 18,
     fontWeight: '600',
-    color: '#1F2937',
     marginTop: 16,
   },
   subInfoText: {
     fontSize: 14,
-    color: '#6B7280',
     marginTop: 8,
   },
   header: {
@@ -390,45 +396,31 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     padding: 16,
-    backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   title: {
     fontSize: 20,
     fontWeight: '700',
-    color: '#1F2937',
   },
   autoRefreshButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    // gap not supported on older RN versions
+    gap: 4,
     paddingHorizontal: 4,
   },
   autoRefreshText: {
     fontSize: 12,
-    color: '#6B7280',
-  },
-  autoRefreshActiveText: {
-    color: '#10B981',
     fontWeight: '600',
   },
   card: {
-    backgroundColor: '#FFFFFF',
     margin: 16,
     marginBottom: 0,
     padding: 16,
     borderRadius: 12,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 3,
   },
   cardTitle: {
     fontSize: 16,
     fontWeight: '700',
-    color: '#1F2937',
     marginBottom: 12,
   },
   summaryGrid: {
@@ -442,11 +434,9 @@ const styles = StyleSheet.create({
   summaryValue: {
     fontSize: 24,
     fontWeight: '700',
-    color: '#1F2937',
   },
   summaryLabel: {
     fontSize: 12,
-    color: '#6B7280',
     marginTop: 4,
   },
   metricRow: {
@@ -454,42 +444,34 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingTop: 12,
     borderTopWidth: 1,
-    borderTopColor: '#E5E7EB',
   },
   metricLabel: {
     fontSize: 14,
-    color: '#6B7280',
   },
   metricValue: {
     fontSize: 14,
     fontWeight: '600',
-    color: '#1F2937',
   },
   alertItem: {
     padding: 12,
-    backgroundColor: '#FEF3C7',
     borderRadius: 8,
     borderLeftWidth: 4,
     marginBottom: 8,
   },
   alertText: {
     fontSize: 14,
-    color: '#1F2937',
   },
   suggestionItem: {
     padding: 12,
-    backgroundColor: '#DBEAFE',
     borderRadius: 8,
     marginBottom: 8,
   },
   suggestionText: {
     fontSize: 14,
-    color: '#1F2937',
   },
   memberItem: {
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: '#E5E7EB',
   },
   memberHeader: {
     flexDirection: 'row',
@@ -500,13 +482,11 @@ const styles = StyleSheet.create({
   memberInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    // gap not supported on older RN versions
-    paddingRight: 8,
+    gap: 8,
   },
   memberName: {
     fontSize: 16,
     fontWeight: '600',
-    color: '#1F2937',
   },
   badge: {
     paddingHorizontal: 12,
@@ -519,17 +499,14 @@ const styles = StyleSheet.create({
   },
   memberStats: {
     marginLeft: 28,
-    // gap not supported on older RN versions
-    paddingVertical: 4,
+    gap: 4,
   },
   memberStat: {
     fontSize: 12,
-    color: '#6B7280',
   },
   timestamp: {
     textAlign: 'center',
     fontSize: 12,
-    color: '#6B7280',
     padding: 16,
   },
 });

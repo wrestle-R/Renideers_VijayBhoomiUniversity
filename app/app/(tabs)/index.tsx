@@ -45,9 +45,10 @@ export default function HomeScreen() {
   const primaryForeground = useThemeColor({}, 'primaryForeground');
   const background = useThemeColor({}, 'background');
   const card = useThemeColor({}, 'card');
-  const text = useThemeColor({}, 'text');
+  const foregroundColor = useThemeColor({}, 'foreground');
   const border = useThemeColor({}, 'border');
-  const muted = useThemeColor({}, 'muted');
+  const mutedColor = useThemeColor({}, 'muted');
+  const mutedForeground = useThemeColor({}, 'mutedForeground');
 
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -208,39 +209,39 @@ export default function HomeScreen() {
           <View style={[styles.iconCircle, { backgroundColor: `${primary}20` }]}>
             <Ionicons name="map-outline" size={24} color={primary} />
           </View>
-          <ThemedText style={[styles.statValue, { color: text }]}>{userStats?.totalDistance.toFixed(1) || '0'}</ThemedText>
-          <ThemedText style={[styles.statLabel, { color: muted }]}>TOTAL KM</ThemedText>
+          <ThemedText style={[styles.statValue, { color: foregroundColor }]}>{userStats?.totalDistance.toFixed(1) || '0'}</ThemedText>
+          <ThemedText style={[styles.statLabel, { color: mutedForeground }]}>TOTAL KM</ThemedText>
         </ThemedView>
 
         <ThemedView style={[styles.statCard, { backgroundColor: card, borderColor: border }]}>
           <View style={[styles.iconCircle, { backgroundColor: `${primary}20` }]}>
             <Ionicons name="time-outline" size={24} color={primary} />
           </View>
-          <ThemedText style={[styles.statValue, { color: text }]}>{userStats?.totalDuration.toFixed(1) || '0'}</ThemedText>
-          <ThemedText style={[styles.statLabel, { color: muted }]}>HOURS</ThemedText>
+          <ThemedText style={[styles.statValue, { color: foregroundColor }]}>{userStats?.totalDuration.toFixed(1) || '0'}</ThemedText>
+          <ThemedText style={[styles.statLabel, { color: mutedForeground }]}>HOURS</ThemedText>
         </ThemedView>
 
         <ThemedView style={[styles.statCard, { backgroundColor: card, borderColor: border }]}>
           <View style={[styles.iconCircle, { backgroundColor: `${primary}20` }]}>
             <Ionicons name="flame-outline" size={24} color={primary} />
           </View>
-          <ThemedText style={[styles.statValue, { color: text }]}>{Math.round(userStats?.totalCalories || 0)}</ThemedText>
-          <ThemedText style={[styles.statLabel, { color: muted }]}>CALORIES</ThemedText>
+          <ThemedText style={[styles.statValue, { color: foregroundColor }]}>{Math.round(userStats?.totalCalories || 0)}</ThemedText>
+          <ThemedText style={[styles.statLabel, { color: mutedForeground }]}>CALORIES</ThemedText>
         </ThemedView>
 
         <ThemedView style={[styles.statCard, { backgroundColor: card, borderColor: border }]}>
           <View style={[styles.iconCircle, { backgroundColor: `${primary}20` }]}>
             <Ionicons name="trending-up-outline" size={24} color={primary} />
           </View>
-          <ThemedText style={[styles.statValue, { color: text }]}>{Math.round(userStats?.totalElevation || 0)}</ThemedText>
-          <ThemedText style={[styles.statLabel, { color: muted }]}>ELEVATION</ThemedText>
+          <ThemedText style={[styles.statValue, { color: foregroundColor }]}>{Math.round(userStats?.totalElevation || 0)}</ThemedText>
+          <ThemedText style={[styles.statLabel, { color: mutedForeground }]}>ELEVATION</ThemedText>
         </ThemedView>
       </ThemedView>
 
       {/* Monthly Progress */}
       {userStats && (
         <ThemedView style={[styles.chartSection, { backgroundColor: card, borderColor: border }]}>
-          <ThemedText style={[styles.sectionTitle, { color: text }]}>Monthly Goal Progress</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { color: foregroundColor }]}>Monthly Goal Progress</ThemedText>
           <View style={styles.progressContainer}>
             <View style={styles.progressCircleContainer}>
               <View style={styles.canvasContainer}>
@@ -260,17 +261,17 @@ export default function HomeScreen() {
                 />
               </View>
               <View style={styles.progressCenterText}>
-                <ThemedText style={[styles.progressPercentage, { color: text }]}> 
+                <ThemedText style={[styles.progressPercentage, { color: foregroundColor }]}> 
                   {Math.round((userStats.monthlyProgress.totalKm / userStats.monthlyProgress.goal) * 100)}%
                 </ThemedText>
-                <ThemedText style={[styles.progressLabel, { color: muted }]}>Complete</ThemedText>
+                <ThemedText style={[styles.progressLabel, { color: mutedForeground }]}>Complete</ThemedText>
               </View>
             </View>
             <View style={styles.progressInfo}>
-              <ThemedText style={[styles.progressText, { color: text }]}> 
+              <ThemedText style={[styles.progressText, { color: foregroundColor }]}> 
                 {userStats.monthlyProgress.totalKm.toFixed(1)} / {userStats.monthlyProgress.goal} km
               </ThemedText>
-              <ThemedText style={[styles.progressSubtext, { color: muted }]}>Monthly Goal</ThemedText>
+              <ThemedText style={[styles.progressSubtext, { color: mutedForeground }]}>Monthly Goal</ThemedText>
             </View>
           </View>
         </ThemedView>
@@ -279,7 +280,7 @@ export default function HomeScreen() {
       {/* Weekly Activity Chart */}
       {userStats && userStats.weeklyStats.length > 0 && (
         <ThemedView style={[styles.chartSection, { backgroundColor: card, borderColor: border }]}>
-          <ThemedText style={[styles.sectionTitle, { color: text }]}>This Week's Activity</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { color: foregroundColor }]}>This Week's Activity</ThemedText>
           <View style={styles.barChartContainer}>
             {userStats.weeklyStats.map((stat, index) => {
               const maxDistance = Math.max(...userStats.weeklyStats.map(s => s.distance), 1);
@@ -297,12 +298,12 @@ export default function HomeScreen() {
                       ]}
                     />
                   </View>
-                  <ThemedText style={[styles.barLabel, { color: muted }]}>{stat.day}</ThemedText>
+                  <ThemedText style={[styles.barLabel, { color: mutedForeground }]}>{stat.day}</ThemedText>
                 </View>
               );
             })}
           </View>
-          <ThemedText style={[styles.chartHint, { color: muted }]}>Distance in kilometers</ThemedText>
+          <ThemedText style={[styles.chartHint, { color: mutedForeground }]}>Distance in kilometers</ThemedText>
         </ThemedView>
       )}
 
@@ -310,8 +311,8 @@ export default function HomeScreen() {
       {userStats && userStats.recentActivities.length > 0 && (
         <ThemedView style={[styles.section, { backgroundColor: card, borderColor: border }]}>
           <View style={styles.sectionHeader}>
-            <ThemedText style={[styles.sectionTitle, { color: text }]}>Recent Activities</ThemedText>
-            <TouchableOpacity onPress={() => router.push('/explore')}>
+            <ThemedText style={[styles.sectionTitle, { color: foregroundColor }]}>Recent Activities</ThemedText>
+            <TouchableOpacity onPress={() => router.push('/settings?tab=activity')}>
               <ThemedText style={[styles.seeAll, { color: primary }]}>See All</ThemedText>
             </TouchableOpacity>
           </View>
@@ -328,13 +329,13 @@ export default function HomeScreen() {
                 />
               </View>
               <View style={styles.activityDetails}>
-                <ThemedText style={[styles.activityTitle, { color: text }]}>{activity.title}</ThemedText>
-                <ThemedText style={[styles.activityMeta, { color: muted }]}> 
+                <ThemedText style={[styles.activityTitle, { color: foregroundColor }]}>{activity.title}</ThemedText>
+                <ThemedText style={[styles.activityMeta, { color: mutedForeground }]}> 
                   {((activity.summary?.totalDistance || 0) / 1000).toFixed(2)} km • 
                   {Math.round((activity.duration || 0) / 60)} min
                 </ThemedText>
               </View>
-              <Ionicons name="chevron-forward" size={20} color={muted} />
+              <Ionicons name="chevron-forward" size={20} color={mutedForeground} />
             </TouchableOpacity>
           ))}
         </ThemedView>
@@ -343,25 +344,25 @@ export default function HomeScreen() {
       {/* Performance Metrics */}
       {userStats && (
         <ThemedView style={[styles.section, { backgroundColor: card, borderColor: border }]}>
-          <ThemedText style={[styles.sectionTitle, { color: text }]}>Performance Overview</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { color: foregroundColor }]}>Performance Overview</ThemedText>
           <View style={styles.metricsGrid}>
             <View style={styles.metricItem}>
               <ThemedText style={[styles.metricValue, { color: primary }]}>
                 {userStats.avgSpeed.toFixed(1)}
               </ThemedText>
-              <ThemedText style={[styles.metricLabel, { color: muted }]}>Avg Speed (km/h)</ThemedText>
+              <ThemedText style={[styles.metricLabel, { color: mutedForeground }]}>Avg Speed (km/h)</ThemedText>
             </View>
             <View style={styles.metricItem}>
               <ThemedText style={[styles.metricValue, { color: primary }]}>
                 {(userStats.totalDistance / (userStats.totalActivities || 1)).toFixed(1)}
               </ThemedText>
-              <ThemedText style={[styles.metricLabel, { color: muted }]}>Avg Distance (km)</ThemedText>
+              <ThemedText style={[styles.metricLabel, { color: mutedForeground }]}>Avg Distance (km)</ThemedText>
             </View>
             <View style={styles.metricItem}>
               <ThemedText style={[styles.metricValue, { color: primary }]}>
                 {((userStats.totalDuration * 60) / (userStats.totalActivities || 1)).toFixed(0)}
               </ThemedText>
-              <ThemedText style={[styles.metricLabel, { color: muted }]}>Avg Duration (min)</ThemedText>
+              <ThemedText style={[styles.metricLabel, { color: mutedForeground }]}>Avg Duration (min)</ThemedText>
             </View>
           </View>
         </ThemedView>
@@ -370,8 +371,8 @@ export default function HomeScreen() {
       {/* Bio Section */}
       {userProfile?.bio && (
         <ThemedView style={[styles.section, { backgroundColor: card, borderColor: border }]}>
-          <ThemedText style={[styles.sectionTitle, { color: text }]}>About</ThemedText>
-          <ThemedText style={[styles.bioText, { color: muted }]}>{userProfile.bio}</ThemedText>
+          <ThemedText style={[styles.sectionTitle, { color: foregroundColor }]}>About</ThemedText>
+          <ThemedText style={[styles.bioText, { color: mutedForeground }]}>{userProfile.bio}</ThemedText>
         </ThemedView>
       )}
 

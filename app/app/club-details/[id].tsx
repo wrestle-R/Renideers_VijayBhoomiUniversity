@@ -302,31 +302,37 @@ export default function ClubDetailsScreen() {
 
           {/* Active Club Trek Banner - Show to all members */}
           {activeTrek?.isActive && (
-            <View style={[styles.activeTrekBanner, { backgroundColor: '#10b981', borderColor: '#059669' }]}>
+            <View style={[styles.activeTrekBanner, { backgroundColor: primaryColor as string, borderColor: borderColor as string }]}>
               <View style={styles.activeTrekHeader}>
-                <View style={styles.pulsingDot} />
-                <ThemedText style={styles.activeTrekTitle}>🏃 Club Trek Active!</ThemedText>
+                <View style={[styles.pulsingDot, { backgroundColor: cardColor as string }]} />
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+                  <Ionicons name="walk" size={18} color="#fff" />
+                  <ThemedText style={styles.activeTrekTitle}>Club Trek Active!</ThemedText>
+                </View>
               </View>
               <ThemedText style={styles.activeTrekText}>
                 {activeTrek.leaderName} started a club trek
               </ThemedText>
-              <ThemedText style={styles.activeTrekMembers}>
-                👥 {activeTrek.memberCount} member{activeTrek.memberCount !== 1 ? 's' : ''} tracking
-              </ThemedText>
+              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 12 }}>
+                <Ionicons name="people" size={16} color="#fff" />
+                <ThemedText style={styles.activeTrekMembers}>
+                  {activeTrek.memberCount} member{activeTrek.memberCount !== 1 ? 's' : ''} tracking
+                </ThemedText>
+              </View>
               
               {/* Join button for non-leader members */}
               {!isCreator && isMember && (
                 <TouchableOpacity
-                  style={[styles.joinTrekButton, { opacity: isJoiningTrek ? 0.6 : 1 }]}
+                  style={[styles.joinTrekButton, { backgroundColor: cardColor as string, opacity: isJoiningTrek ? 0.6 : 1 }]}
                   onPress={handleJoinClubTrek}
                   disabled={isJoiningTrek}
                 >
                   {isJoiningTrek ? (
-                    <ActivityIndicator color="#10b981" />
+                    <ActivityIndicator color={primaryColor as string} />
                   ) : (
                     <>
-                      <Ionicons name="add-circle" size={20} color="#10b981" style={{ marginRight: 8 }} />
-                      <ThemedText style={styles.joinTrekButtonText}>
+                      <Ionicons name="add-circle" size={20} color={primaryColor as string} style={{ marginRight: 8 }} />
+                      <ThemedText style={[styles.joinTrekButtonText, { color: primaryColor as string }]}>
                         Join Club Trek
                       </ThemedText>
                     </>
@@ -585,7 +591,7 @@ const styles = StyleSheet.create({
     marginTop: 16,
     padding: 16,
     borderRadius: 12,
-    borderWidth: 2,
+    borderWidth: 1,
   },
   activeTrekHeader: {
     flexDirection: 'row',
@@ -596,7 +602,6 @@ const styles = StyleSheet.create({
     width: 10,
     height: 10,
     borderRadius: 5,
-    backgroundColor: '#fff',
     marginRight: 8,
   },
   activeTrekTitle: {
@@ -613,7 +618,6 @@ const styles = StyleSheet.create({
   activeTrekMembers: {
     fontSize: 13,
     color: '#fff',
-    marginBottom: 12,
     opacity: 0.9,
   },
   joinTrekButton: {
@@ -622,10 +626,8 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     justifyContent: 'center',
     alignItems: 'center',
-    backgroundColor: '#fff',
   },
   joinTrekButtonText: {
-    color: '#10b981',
     fontSize: 15,
     fontWeight: '700',
   },
