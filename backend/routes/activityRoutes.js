@@ -7,5 +7,6 @@ router.get('/feed', auth, activityController.getFeed);
 router.get('/my-activities', auth, activityController.getMyActivities);
 router.get('/:id', auth, activityController.getActivityById);
 router.get('/:id/insights', auth, activityController.getActivityInsights);
+router.get('/:id/pace-splits', auth, activityController.getPaceSplits);
 
 module.exports = router;

@@ -3,12 +3,15 @@ import { useUser } from "../context/UserContext";
 import axios from "axios";
 import { Card, CardContent, CardHeader, CardTitle } from "../components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Activity, MapPin, Clock, Calendar, ArrowLeft, BarChart2, Map as MapIcon, ChevronLeft, ChevronRight } from "lucide-react";
+import { Activity, MapPin, Clock, Calendar, ArrowLeft, BarChart2, Map as MapIcon, ChevronLeft, ChevronRight, Brain, TrendingUp, Flame, Mountain, Timer, Footprints, Zap, Trophy, Target } from "lucide-react";
 import { Button } from "../components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { UserSidebar } from "../components/UserSidebar";
 import { SidebarProvider } from "../components/ui/sidebar";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../components/ui/dialog";
+import { Badge } from "../components/ui/badge";
+import { ActivityStatsCalendar } from "../components/ActivityStatsCalendar";
 
 export default function MyActivities() {
   const { user } = useUser();
@@ -18,6 +21,12 @@ export default function MyActivities() {
   const [error, setError] = useState(null);
   const [viewMode, setViewMode] = useState('default'); // 'default' | 'stats'
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [aiAnalysis, setAiAnalysis] = useState(null);
+  const [analyzing, setAnalyzing] = useState(false);
+  const [showAnalysis, setShowAnalysis] = useState(false);
+  const [consistencySuggestions, setConsistencySuggestions] = useState(null);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
+  const [showConsistency, setShowConsistency] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -37,6 +46,42 @@ export default function MyActivities() {
       setError("Failed to load activities.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleConsistencyClick = async () => {
+    try {
+      setLoadingSuggestions(true);
+      setShowConsistency(true);
+      const detailedStats = getDetailedStats();
+      const consistencyStatus = detailedStats.find(s => s.label === "Consistency")?.value;
+      
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/ai/consistency-suggestions`, {
+        consistencyStatus,
+        activities,
+        userProfile: user
+      });
+      setConsistencySuggestions(res.data);
+    } catch (err) {
+      console.error("Consistency suggestions failed:", err);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const handleAnalyzeProfile = async () => {
+    try {
+      setAnalyzing(true);
+      setShowAnalysis(true);
+      const res = await axios.post(`${import.meta.env.VITE_API_URL}/api/ai/analyze-profile`, {
+        activities,
+        userProfile: user
+      });
+      setAiAnalysis(res.data);
+    } catch (err) {
+      console.error("AI Analysis failed:", err);
+    } finally {
+      setAnalyzing(false);
     }
   };
 
@@ -72,6 +117,64 @@ export default function MyActivities() {
     };
   };
 
+  const getLast30DaysStats = () => {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    
+    const recentActivities = activities.filter(a => new Date(a.startTime) >= thirtyDaysAgo);
+    
+    // Create array of last 30 days
+    const chartData = [];
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+      const dateStr = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      
+      const dayActivities = recentActivities.filter(a => {
+        const ad = new Date(a.startTime);
+        return ad.getDate() === d.getDate() && ad.getMonth() === d.getMonth();
+      });
+      
+      const dayDistance = dayActivities.reduce((sum, a) => sum + (a.summary?.totalDistance || 0), 0);
+      
+      chartData.push({
+        date: dateStr,
+        distance: parseFloat((dayDistance / 1000).toFixed(2))
+      });
+    }
+    
+    return chartData;
+  };
+
+  const getDetailedStats = () => {
+    const totalActivities = activities.length;
+    const totalDistance = activities.reduce((sum, a) => sum + (a.summary?.totalDistance || 0), 0);
+    const totalDuration = activities.reduce((sum, a) => sum + (a.summary?.duration || 0), 0);
+    
+    // Simple consistency check
+    const lastActivityDate = activities.length > 0 ? new Date(activities[0].startTime) : null;
+    const daysSinceLast = lastActivityDate ? Math.floor((new Date() - lastActivityDate) / (1000 * 60 * 60 * 24)) : 999;
+    let consistencyStatus = "Inactive";
+    let consistencyColor = "text-gray-500";
+    
+    if (daysSinceLast <= 3) {
+      consistencyStatus = "Very Active";
+      consistencyColor = "text-green-500";
+    } else if (daysSinceLast <= 7) {
+      consistencyStatus = "Active";
+      consistencyColor = "text-blue-500";
+    } else if (daysSinceLast <= 14) {
+      consistencyStatus = "Slipping";
+      consistencyColor = "text-yellow-500";
+    }
+
+    return [
+      { label: "Total Activities", value: totalActivities, icon: Activity, color: "text-blue-500" },
+      { label: "Total Distance", value: `${(totalDistance / 1000).toFixed(1)} km`, icon: MapPin, color: "text-green-500" },
+      { label: "Total Time", value: `${Math.floor(totalDuration / 3600)}h ${Math.floor((totalDuration % 3600) / 60)}m`, icon: Clock, color: "text-orange-500" },
+      { label: "Consistency", value: consistencyStatus, icon: Target, color: consistencyColor },
+    ];
+  };
+
   const getMonthlyStats = () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -95,13 +198,15 @@ export default function MyActivities() {
 
     return {
       activities: monthlyActivities,
-      chartData,
+      chartData, // Keeping this for backward compatibility if needed, but we use getLast30DaysStats for the main chart
       totalDistance: monthlyActivities.reduce((sum, a) => sum + (a.summary?.totalDistance || 0), 0)
     };
   };
 
   const weeklyStats = getWeeklyStats();
   const monthlyStats = getMonthlyStats();
+  const last30DaysData = getLast30DaysStats();
+  const detailedStats = getDetailedStats();
 
   const renderCalendar = () => {
     const year = currentDate.getFullYear();
@@ -111,7 +216,7 @@ export default function MyActivities() {
     
     const days = [];
     for (let i = 0; i < firstDay; i++) {
-      days.push(<div key={`empty-${i}`} className="h-10 w-10" />);
+      days.push(<div key={`empty-${i}`} className="h-8 w-8" />);
     }
     
     for (let i = 1; i <= daysInMonth; i++) {
@@ -119,8 +224,8 @@ export default function MyActivities() {
       days.push(
         <div 
           key={i} 
-          className={`h-10 w-10 flex items-center justify-center rounded-full text-sm font-medium
-            ${hasActivity ? 'bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90' : 'text-muted-foreground hover:bg-muted'}
+          className={`h-8 w-8 flex items-center justify-center rounded-full text-xs font-medium transition-all
+            ${hasActivity ? 'bg-primary text-primary-foreground cursor-pointer hover:bg-primary/90 shadow-sm' : 'text-muted-foreground hover:bg-muted'}
           `}
           title={hasActivity ? 'Activity recorded' : ''}
         >
@@ -147,25 +252,87 @@ export default function MyActivities() {
                 <h2 className="text-3xl font-bold tracking-tight">My Activities</h2>
               </div>
               
-              <div className="flex items-center bg-muted p-1 rounded-lg">
-                <button
-                  onClick={() => setViewMode('default')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'default' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  Feed
-                </button>
-                <button
-                  onClick={() => setViewMode('stats')}
-                  className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-                    viewMode === 'stats' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
-                  }`}
-                >
-                  Stats
-                </button>
+              <div className="flex items-center gap-3">
+                <div className="flex items-center bg-muted p-1 rounded-lg">
+                  <button
+                    onClick={() => setViewMode('default')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      viewMode === 'default' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Feed
+                  </button>
+                  <button
+                    onClick={() => setViewMode('stats')}
+                    className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
+                      viewMode === 'stats' ? 'bg-background shadow-sm text-foreground' : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    Stats
+                  </button>
+                </div>
               </div>
             </div>
+
+            {/* Consistency Suggestions Dialog */}
+            <Dialog open={showConsistency} onOpenChange={setShowConsistency}>
+              <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                <DialogHeader>
+                  <DialogTitle className="flex items-center gap-2 text-2xl">
+                    <Target className="h-6 w-6 text-cyan-500" />
+                    Consistency Improvement Guide
+                  </DialogTitle>
+                  <DialogDescription>
+                    AI-powered suggestions to help you stay consistent with your fitness goals.
+                  </DialogDescription>
+                </DialogHeader>
+                
+                {loadingSuggestions ? (
+                  <div className="flex flex-col items-center justify-center py-10 space-y-4">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-500"></div>
+                    <p className="text-muted-foreground">Generating personalized suggestions...</p>
+                  </div>
+                ) : consistencySuggestions ? (
+                  <div className="space-y-6 py-4">
+                    <div className="bg-cyan-50 dark:bg-cyan-900/20 p-4 rounded-xl border border-cyan-100 dark:border-cyan-800">
+                      <h4 className="font-semibold text-cyan-700 dark:text-cyan-300 mb-2">Why Consistency Matters</h4>
+                      <p className="text-sm text-cyan-900 dark:text-cyan-200 leading-relaxed">
+                        {typeof consistencySuggestions.importance === 'string' ? consistencySuggestions.importance : JSON.stringify(consistencySuggestions.importance)}
+                      </p>
+                    </div>
+
+                    <div>
+                      <h4 className="font-semibold mb-3 flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4 text-green-500" /> Your Action Plan This Week
+                      </h4>
+                      <ul className="space-y-2">
+                        {consistencySuggestions.tips && Array.isArray(consistencySuggestions.tips) ? consistencySuggestions.tips.map((tip, i) => (
+                          <li key={i} className="flex gap-3 text-sm">
+                            <span className="inline-flex items-center justify-center min-w-[24px] h-6 rounded-full bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 text-xs font-semibold">
+                              {i + 1}
+                            </span>
+                            <span className="text-muted-foreground pt-0.5">{typeof tip === 'string' ? tip : JSON.stringify(tip)}</span>
+                          </li>
+                        )) : null}
+                      </ul>
+                    </div>
+
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 p-4 rounded-xl border border-purple-100 dark:border-purple-800">
+                      <h4 className="font-semibold mb-2 flex items-center gap-2">
+                        <Brain className="h-4 w-4 text-purple-500" /> Your Motivation Boost
+                      </h4>
+                      <p className="text-sm text-purple-900 dark:text-purple-200 leading-relaxed">
+                        {typeof consistencySuggestions.motivation === 'string' ? consistencySuggestions.motivation : JSON.stringify(consistencySuggestions.motivation)}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    Failed to generate suggestions. Please try again.
+                  </div>
+                )}
+              </DialogContent>
+            </Dialog>
 
             {/* Weekly Stats Summary (Visible in both views) */}
             <Card>
@@ -260,74 +427,34 @@ export default function MyActivities() {
             ) : (
               /* Stats View */
               <div className="space-y-6">
-                {/* Calendar Section */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <CardTitle>Activity Calendar</CardTitle>
-                    <div className="flex items-center gap-2">
-                      <Button variant="ghost" size="icon" onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}>
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      <span className="font-medium min-w-[100px] text-center">
-                        {currentDate.toLocaleString('default', { month: 'long', year: 'numeric' })}
-                      </span>
-                      <Button variant="ghost" size="icon" onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}>
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-7 gap-2 text-center mb-2">
-                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map(d => (
-                        <div key={d} className="text-xs font-medium text-muted-foreground">{d}</div>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-7 gap-2 place-items-center">
-                      {renderCalendar()}
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Monthly Progress Chart */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Monthly Distance Progression</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[300px] w-full">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={monthlyStats.chartData}>
-                          <CartesianGrid strokeDasharray="3 3" />
-                          <XAxis dataKey="day" />
-                          <YAxis />
-                          <Tooltip />
-                          <Line type="monotone" dataKey="distance" stroke="#2563eb" strokeWidth={2} dot={false} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
                 
-                {/* Progress Bar Section */}
-                 <Card>
-                  <CardHeader>
-                    <CardTitle>Monthly Goal Progress</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>{monthlyStats.totalDistance ? (monthlyStats.totalDistance / 1000).toFixed(1) : 0} km</span>
-                        <span className="text-muted-foreground">Goal: 100 km</span>
-                      </div>
-                      <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-primary transition-all duration-500"
-                          style={{ width: `${Math.min(((monthlyStats.totalDistance / 1000) / 100) * 100, 100)}%` }}
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* Detailed Stats Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  {detailedStats.map((stat, index) => (
+                    <Card 
+                      key={index} 
+                      className={`overflow-hidden border-2 ${stat.label === "Consistency" ? "border-purple-200/30 dark:border-purple-700/30 cursor-pointer hover:shadow-lg hover:border-purple-500 transition-all" : "border-purple-200/20 dark:border-purple-700/20 hover:shadow-md transition-shadow hover:border-purple-200/40"}`}
+                      onClick={() => stat.label === "Consistency" && handleConsistencyClick()}
+                    >
+                      <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
+                        <div className={`p-2 rounded-full ${stat.color === "text-blue-500" ? "bg-blue-100 dark:bg-blue-900/30" : stat.color === "text-green-500" ? "bg-green-100 dark:bg-green-900/30" : stat.color === "text-orange-500" ? "bg-orange-100 dark:bg-orange-900/30" : "bg-purple-100 dark:bg-purple-900/30"}`}>
+                          <stat.icon className={`h-5 w-5 ${stat.color}`} />
+                        </div>
+                        <div>
+                          <p className="text-xs text-muted-foreground font-medium uppercase tracking-wider">{stat.label}</p>
+                          <p className="text-lg font-bold">{stat.value}</p>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* New Activity Stats Calendar Component */}
+                <ActivityStatsCalendar 
+                  last30DaysData={last30DaysData}
+                  monthlyStats={monthlyStats}
+                  activities={activities}
+                />
               </div>
             )}
           </div>

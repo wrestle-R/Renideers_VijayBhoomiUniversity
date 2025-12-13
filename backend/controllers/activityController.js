@@ -372,3 +372,110 @@ exports.getActivityInsights = async (req, res) => {
     res.status(500).json({ error: 'Failed to generate insights' });
   }
 };
+
+// Get pace splits for detailed pace analysis
+exports.getPaceSplits = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { unit = 'km' } = req.query; // 'km' or 'mile'
+    
+    const activity = await Activity.findById(id);
+    if (!activity) {
+      return res.status(404).json({ error: 'Activity not found' });
+    }
+
+    if (!activity.path || activity.path.length < 2) {
+      return res.json({ splits: [] });
+    }
+
+    const segmentSize = unit === 'mile' ? 1609.34 : 1000; // meters
+    const unitLabel = unit === 'mile' ? 'mile' : 'km';
+
+    const splits = [];
+    let cumulativeDistance = 0;
+    let segmentDistance = 0;
+    let segmentStartIdx = 0;
+    let segmentStartTime = null;
+    let segmentElevationGain = 0;
+    let segmentElevationLoss = 0;
+
+    for (let i = 1; i < activity.path.length; i++) {
+      const prev = activity.path[i - 1];
+      const curr = activity.path[i];
+
+      if (segmentStartTime === null) {
+        segmentStartTime = new Date(prev.timestamp).getTime();
+      }
+
+      // Calculate distance using Haversine formula
+      const R = 6371e3;
+      const φ1 = prev.latitude * Math.PI / 180;
+      const φ2 = curr.latitude * Math.PI / 180;
+      const Δφ = (curr.latitude - prev.latitude) * Math.PI / 180;
+      const Δλ = (curr.longitude - prev.longitude) * Math.PI / 180;
+      const a = Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+                Math.cos(φ1) * Math.cos(φ2) *
+                Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      const pointDistance = R * c;
+
+      segmentDistance += pointDistance;
+      cumulativeDistance += pointDistance;
+
+      // Elevation change
+      const elevDiff = curr.altitude - prev.altitude;
+      if (elevDiff > 0) segmentElevationGain += elevDiff;
+      else segmentElevationLoss += Math.abs(elevDiff);
+
+      // Complete segment when we reach the segment size or end of path
+      if (segmentDistance >= segmentSize || i === activity.path.length - 1) {
+        const segmentEndTime = new Date(curr.timestamp).getTime();
+        const durationSeconds = (segmentEndTime - segmentStartTime) / 1000;
+        const durationMinutes = durationSeconds / 60;
+
+        // Calculate pace (min/km or min/mile)
+        const actualSegmentKm = segmentDistance / 1000;
+        const paceMinPerKm = durationMinutes / actualSegmentKm;
+        
+        // Format pace as MM:SS
+        const paceMinutes = Math.floor(paceMinPerKm);
+        const paceSeconds = Math.round((paceMinPerKm - paceMinutes) * 60);
+        const paceFormatted = `${paceMinutes}:${paceSeconds.toString().padStart(2, '0')}`;
+
+        // Speed in km/h
+        const speed = durationSeconds > 0 ? (segmentDistance / 1000) / (durationSeconds / 3600) : 0;
+
+        splits.push({
+          splitNumber: splits.length + 1,
+          label: `${unitLabel} ${splits.length + 1}`,
+          distance: parseFloat((segmentDistance / 1000).toFixed(2)), // km
+          distanceMeters: Math.round(segmentDistance),
+          durationSeconds: Math.round(durationSeconds),
+          durationMinutes: parseFloat(durationMinutes.toFixed(2)),
+          pace: parseFloat(paceMinPerKm.toFixed(2)), // numeric pace for charting
+          paceFormatted, // human-readable pace
+          speed: parseFloat(speed.toFixed(2)), // km/h
+          elevationGain: Math.round(segmentElevationGain),
+          elevationLoss: Math.round(segmentElevationLoss),
+        });
+
+        // Reset for next segment
+        segmentDistance = 0;
+        segmentStartIdx = i;
+        segmentStartTime = segmentEndTime;
+        segmentElevationGain = 0;
+        segmentElevationLoss = 0;
+      }
+    }
+
+    res.json({ 
+      splits,
+      unit: unitLabel,
+      totalDistance: parseFloat((cumulativeDistance / 1000).toFixed(2)),
+      splitCount: splits.length
+    });
+  } catch (error) {
+    console.error('Error calculating pace splits:', error);
+    res.status(500).json({ error: 'Failed to calculate pace splits' });
+  }
+};

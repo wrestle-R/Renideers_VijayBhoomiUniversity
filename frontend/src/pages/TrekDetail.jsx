@@ -4,15 +4,17 @@ import { Card } from "../components/ui/card";
 import { SidebarProvider } from "@/components/ui/sidebar";
 import { UserSidebar } from "@/components/UserSidebar";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Sparkles } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
+import { Sparkles } from "lucide-react"; // Add import
 import { AIDifficultyEstimator } from "@/components/AIDifficultyEstimator";
+import { AIQuickSummary } from "@/components/AIQuickSummary";
+import { ItineraryFlow } from "@/components/ItineraryFlow";
 
 const TrekDetail = () => {
   const { id } = useParams();
   const [trek, setTrek] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [aiSummary, setAiSummary] = useState("");
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -34,9 +36,9 @@ const TrekDetail = () => {
   const generateSummary = async () => {
     try {
       const res = await fetch(`${import.meta.env.VITE_API_URL}/api/ai/summary`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ trekId: id }),
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ trekId: id })
       });
       const data = await res.json();
       setAiSummary(data.summary);
@@ -112,66 +114,87 @@ const TrekDetail = () => {
             </div>
           )}
 
-          {/* CONTENT SECTION */}
-          <div className="px-8 py-12 max-w-4xl mx-auto space-y-10">
-            {/* AI SUMMARY */}
-            <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <Sparkles className="w-4 h-4 text-primary" />
-                <h3 className="font-semibold text-primary">AI Quick Summary</h3>
-              </div>
+              <div className="space-y-8">
+                <div>
+                  <h1 className="text-4xl font-bold mb-2">{trek.title}</h1>
+                  <p className="text-xl text-muted-foreground flex items-center gap-2">
+                    {trek.location}
+                  </p>
+                </div>
 
-              {aiSummary ? (
-                <p className="text-sm italic text-muted-foreground">
-                  {aiSummary}
-                </p>
-              ) : (
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={generateSummary}
-                  className="text-xs"
-                >
-                  Generate Summary
-                </Button>
-              )}
-            </div>
-
-            <AIDifficultyEstimator />
-
-            {/* OVERVIEW */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">Overview</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                {trek.description}
-              </p>
-            </section>
-
-            {/* HIGHLIGHTS */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">Highlights</h2>
-              <ul className="grid md:grid-cols-2 gap-3">
-                {trek.highlights.map((h, i) => (
-                  <li key={i} className="flex gap-2">
-                    <span className="w-2 h-2 bg-primary rounded-full mt-2" />
-                    {h}
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            {/* ITINERARY */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">Itinerary</h2>
-              <div className="space-y-4">
-                {trek.itinerary.map((it, i) => (
-                  <div key={i} className="flex gap-4">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
-                      {i + 1}
-                    </div>
-                    <p>{it}</p>
+                {/* AI Summary Section */}
+                <div className="bg-primary/5 border border-primary/20 rounded-lg p-4 my-6">
+                  <div className="flex items-center gap-2 mb-2">
+                    <Sparkles className="w-4 h-4 text-primary" />
+                    <h3 className="font-semibold text-primary">AI Quick Summary</h3>
                   </div>
-                ))}
+                  {aiSummary ? (
+                    <p className="text-sm italic text-muted-foreground">{aiSummary}</p>
+                  ) : (
+                    <Button variant="ghost" size="sm" onClick={generateSummary} className="text-xs h-8">
+                      Generate Summary
+                    </Button>
+                  )}
+                </div>
+
+                <AIDifficultyEstimator />
+
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 bg-secondary/50 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Altitude</p>
+                    <p className="font-semibold">{trek.altitude} m</p>
+                  </div>
+                  <div className="p-4 bg-secondary/50 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Duration</p>
+                    <p className="font-semibold">{trek.duration}</p>
+                  </div>
+                  <div className="p-4 bg-secondary/50 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Difficulty</p>
+                    <p className="font-semibold">{trek.difficulty}</p>
+                  </div>
+                  <div className="p-4 bg-secondary/50 rounded-lg">
+                    <p className="text-sm text-muted-foreground mb-1">Season</p>
+                    <p className="font-semibold">{trek.season}</p>
+                  </div>
+                </div>
+
+                <div className="prose dark:prose-invert max-w-none">
+                  <h3 className="text-2xl font-semibold mb-4">Overview</h3>
+                  <p className="text-muted-foreground leading-relaxed">{trek.description}</p>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold mb-4">Highlights</h3>
+                  <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {trek.highlights.map((h, i) => (
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="mt-2 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
+                        <span>{h}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div>
+                  <h3 className="text-2xl font-semibold mb-4">Itinerary</h3>
+                  <div className="space-y-4">
+                    {trek.itinerary.map((it, i) => (
+                      <div key={i} className="flex gap-4">
+                        <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
+                          {i + 1}
+                        </div>
+                        <p className="pt-1">{it}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="prose dark:prose-invert max-w-none">
+                  <h3 className="text-2xl font-semibold mb-4">In-Depth Details</h3>
+                  <div className="whitespace-pre-line text-muted-foreground leading-relaxed">
+                    {trek.inDepthDescription}
+                  </div>
+                </div>
               </div>
             </section>
 

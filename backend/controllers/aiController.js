@@ -115,6 +115,50 @@ exports.estimateDifficulty = async (req, res) => {
   }
 };
 
+// 6. AI Profile Analysis
+exports.analyzeProfile = async (req, res) => {
+  try {
+    const { activities, userProfile } = req.body;
+    
+    // Prepare data for AI
+    const activitySummary = activities.map(a => ({
+      title: a.title,
+      date: a.startTime,
+      distance: a.summary?.totalDistance,
+      duration: a.summary?.duration,
+      calories: a.summary?.caloriesBurned
+    })).slice(0, 20); // Limit to last 20 activities to avoid token limits
+
+    const prompt = `
+      Analyze this user's fitness profile based on their recent activities:
+      ${JSON.stringify(activitySummary)}
+      
+      User Profile Context: ${JSON.stringify(userProfile || {})}
+
+      Provide a comprehensive analysis including:
+      1. Fitness Level Assessment
+      2. Consistency Score (1-10)
+      3. Key Strengths
+      4. Areas for Improvement
+      5. Personalized Training Advice
+      
+      Format the response as JSON with keys: "fitnessLevel", "consistencyScore", "strengths", "improvements", "advice".
+      Keep the tone encouraging but professional.
+    `;
+
+    const response = await callGroq("You are an expert fitness coach and data analyst.", prompt);
+    
+    // Clean up response to ensure valid JSON
+    const jsonStr = response.substring(response.indexOf('{'), response.lastIndexOf('}') + 1);
+    const analysis = JSON.parse(jsonStr);
+    
+    res.json(analysis);
+  } catch (error) {
+    console.error("AI Profile Analysis Error:", error);
+    res.status(500).json({ error: "Failed to analyze profile" });
+  }
+};
+
 /**
  * Programmatic helper to generate an itinerary string using the AI pipeline.
  * This is exported so other controllers (WhatsApp webhook) can reuse it.
@@ -129,4 +173,67 @@ exports.generateItinerary = async (treks = [], startDate = 'ASAP', duration = 3)
   const itinerary = await callGroq('You are a logistics expert.', prompt);
   console.log(itinerary)
   return itinerary;
+};
+
+// 7. AI Consistency Suggestions
+exports.getConsistencySuggestions = async (req, res) => {
+  try {
+    const { consistencyStatus, activities, userProfile } = req.body;
+    
+    // Prepare activity data
+    const lastActivity = activities.length > 0 ? new Date(activities[0].startTime) : null;
+    const daysSinceLast = lastActivity ? Math.floor((new Date() - lastActivity) / (1000 * 60 * 60 * 24)) : 999;
+    
+    const activityCount = activities.length;
+    const totalDistance = activities.reduce((sum, a) => sum + (a.summary?.totalDistance || 0), 0);
+    const avgDistance = activityCount > 0 ? (totalDistance / 1000 / activityCount).toFixed(1) : 0;
+
+    const prompt = `
+      A fitness enthusiast's consistency status is: "${consistencyStatus}"
+      - Days since last activity: ${daysSinceLast}
+      - Total activities: ${activityCount}
+      - Average distance per activity: ${avgDistance} km
+      - User name: ${userProfile?.fullName || 'Friend'}
+      
+      Provide personalized, motivational suggestions to improve their workout consistency. Include:
+      1. Why consistency matters for their fitness goals - provide a clear, single sentence or short paragraph
+      2. 3-4 specific, actionable tips they can implement this week - each tip should be a simple string describing the action
+      3. A motivational message tailored to their current status - provide an encouraging message as a simple string
+      
+      Be encouraging, specific, and practical. Format as JSON with keys: "importance" (string), "tips" (array of strings only, no objects), "motivation" (string).
+      Example: {"importance": "Consistency builds momentum...", "tips": ["Tip 1 description", "Tip 2 description"], "motivation": "You got this!"}
+    `;
+
+    const response = await callGroq(
+      "You are an experienced fitness coach specializing in motivation and habit formation.",
+      prompt
+    );
+    
+    // Clean up response to ensure valid JSON
+    const jsonStr = response.substring(response.indexOf('{'), response.lastIndexOf('}') + 1);
+    let suggestions = JSON.parse(jsonStr);
+    
+    // Normalize the response to ensure consistency in format
+    // Extract just the strings if the AI returns objects
+    if (suggestions.importance && typeof suggestions.importance === 'object') {
+      suggestions.importance = suggestions.importance.description || JSON.stringify(suggestions.importance);
+    }
+    
+    if (suggestions.tips && Array.isArray(suggestions.tips)) {
+      suggestions.tips = suggestions.tips.map(tip => {
+        if (typeof tip === 'string') return tip;
+        if (typeof tip === 'object' && tip.description) return tip.description;
+        return JSON.stringify(tip);
+      });
+    }
+    
+    if (suggestions.motivation && typeof suggestions.motivation === 'object') {
+      suggestions.motivation = suggestions.motivation.message || JSON.stringify(suggestions.motivation);
+    }
+    
+    res.json(suggestions);
+  } catch (error) {
+    console.error("AI Consistency Suggestions Error:", error);
+    res.status(500).json({ error: "Failed to generate suggestions" });
+  }
 };
