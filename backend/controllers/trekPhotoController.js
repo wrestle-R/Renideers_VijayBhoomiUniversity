@@ -392,7 +392,7 @@ exports.getSpeciesDetails = async (req, res) => {
       ],
       generationConfig: {
         temperature: 0.3,
-        maxOutputTokens: 1000,
+        maxOutputTokens: 4096,
       },
     };
 
@@ -449,9 +449,14 @@ exports.getSpeciesDetails = async (req, res) => {
       console.error('\n❌ Species details JSON parse error:', parseError.message);
       console.error('Raw text that failed to parse:', text);
       console.error('====================================================\n');
-      return res.status(500).json({
-        error: 'Failed to parse AI response',
-        description: 'Unable to retrieve species information',
+      
+      // Guardrail: Return fallback data instead of error
+      console.log('⚠️ Returning fallback data due to parse error');
+      return res.json({
+        scientificName: speciesName,
+        habitat: "Habitat details are currently unavailable. Please try again later.",
+        distribution: "Distribution details are currently unavailable.",
+        safetyTips: ["Always maintain a respectful and safe distance from wildlife."]
       });
     }
   } catch (err) {

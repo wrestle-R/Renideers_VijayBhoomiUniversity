@@ -39,6 +39,19 @@ const TrekPhotoRecognition = () => {
     }
   }, []);
 
+  // Load last analysis (image + results) so page refresh preserves UI
+  useEffect(() => {
+    try {
+      const last = JSON.parse(localStorage.getItem('trek_ai_last')) || null;
+      if (last && last.image && last.result) {
+        setCapturedImage(last.image);
+        setResults(last.result);
+      }
+    } catch (e) {
+      // ignore parse errors
+    }
+  }, []);
+
   useEffect(() => {
     const onDocClick = (e) => {
       if (showHistoryDropdown && dropdownRef.current && !dropdownRef.current.contains(e.target)) {
@@ -171,6 +184,13 @@ const TrekPhotoRecognition = () => {
         };
         setResults(resultsData);
 
+        // Persist last shown image + results so a page refresh restores the view
+        try {
+          localStorage.setItem('trek_ai_last', JSON.stringify({ image: imageDataUrl, result: resultsData }));
+        } catch (e) {
+          console.error('Failed to persist last analysis', e);
+        }
+
         // Save compact entry
         saveToHistory({
           timestamp: new Date().toLocaleString(),
@@ -240,6 +260,11 @@ const TrekPhotoRecognition = () => {
     setResults(null);
     setError(null);
     stopCamera();
+    try {
+      localStorage.removeItem('trek_ai_last');
+    } catch (e) {
+      console.error('Failed to remove persisted last analysis', e);
+    }
   };
 
   const loadHistoryItem = (item) => {
@@ -247,6 +272,11 @@ const TrekPhotoRecognition = () => {
     setCapturedImage(item.image);
     setResults(item.result);
     setShowHistoryDropdown(false);
+    try {
+      localStorage.setItem('trek_ai_last', JSON.stringify({ image: item.image, result: item.result }));
+    } catch (e) {
+      console.error('Failed to persist last analysis from history', e);
+    }
   };
 
   const getDangerClasses = (dangerLevel) => {

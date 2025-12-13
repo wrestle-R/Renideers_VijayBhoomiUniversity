@@ -143,21 +143,23 @@ export function UserSidebar() {
       </motion.div>
 
       {/* Mobile Bottom Navbar */}
-      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border z-50 pb-2">
-        <nav className="flex justify-around items-center p-2">
-          {menuItems.map((item, index) => {
+      <div className="lg:hidden fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-md border-t border-border z-50 pb-safe shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]">
+        <nav className="grid grid-cols-6 gap-1 p-2">
+          {menuItems.slice(0, 6).map((item, index) => {
             const active = isActive(item.path);
             return (
               <Button
                 key={index}
                 variant="ghost"
                 onClick={() => navigate(item.path)}
-                className={`flex flex-col items-center justify-center h-14 flex-1 gap-1 rounded-none px-0 ${
-                  active ? "text-primary" : "text-muted-foreground"
+                className={`flex flex-col items-center justify-center h-14 rounded-xl transition-all duration-300 ${
+                  active 
+                    ? "text-primary bg-primary/10 scale-105" 
+                    : "text-muted-foreground hover:bg-muted/50"
                 }`}
               >
-                <item.icon className={`w-5 h-5 ${active ? "fill-current" : ""}`} />
-                <span className="text-[10px] font-medium">{item.label}</span>
+                <item.icon className={`w-5 h-5 mb-0.5 ${active ? "fill-current" : ""}`} />
+                <span className="text-[9px] font-medium leading-none">{item.label}</span>
               </Button>
             );
           })}
