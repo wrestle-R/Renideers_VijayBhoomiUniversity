@@ -27,6 +27,7 @@ export function ActivityFeed() {
         headers: { 'x-user-id': user.mongo_uid }
       });
       setActivities(res.data);
+      console.log(res.data);
     } catch (err) {
       console.error("Error fetching activity feed:", err);
       setError("Failed to load activities.");
@@ -105,6 +106,9 @@ export function ActivityFeed() {
                 <span className="text-xs">Date</span>
               </div>
             </div>
+            <Button onClick={() => navigate(`/activity/${activity._id}`)}>
+              View Map & Details
+            </Button>
           </CardContent>
         </Card>
       ))}

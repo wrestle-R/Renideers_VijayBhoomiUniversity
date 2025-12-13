@@ -20,6 +20,7 @@ import Clubs from "./pages/Dashboard/Clubs";
 import ClubDetails from "./pages/Dashboard/ClubDetails";
 import { AIChatbot } from "./components/AIChatbot";
 import Badges from "./pages/Badges";
+import ActivityDetail from "./pages/ActivityDetail"
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useUser();
@@ -121,10 +122,10 @@ function AppRoutes() {
         }
       />
       <Route
-        path="/treks/:id"
+        path="/activity/:id"
         element={
           <ProtectedRoute>
-            <TrekDetail />
+            <ActivityDetail />
           </ProtectedRoute>
         }
       />
