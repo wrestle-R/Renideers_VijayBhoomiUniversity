@@ -4,6 +4,13 @@ import { Pedometer } from 'expo-sensors';
 import axios from 'axios';
 import Constants from 'expo-constants';
 import { useAuth } from './AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { 
+  FallDetector, 
+  sendSOSMessage, 
+  getCurrentLocationForSOS,
+  type SOSMessage 
+} from '../lib/sosHelper';
 
 type LocationPoint = {
   latitude: number;
@@ -50,6 +57,15 @@ type TrekContextValue = {
   currentLocation: LocationPoint | null;
   loading: boolean;
   error: string | null;
+  // SOS functionality
+  sosState: {
+    isFallDetected: boolean;
+    isSOSTimerActive: boolean;
+    sosTimerSeconds: number;
+    lastSOSSentAt: number | null;
+  };
+  triggerManualSOS: () => Promise<void>;
+  cancelSOSTimer: () => void;
 };
 
 const TrekContext = createContext<TrekContextValue | undefined>(undefined);
@@ -80,6 +96,17 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
+  // SOS State
+  const [sosState, setSOSState] = useState({
+    isFallDetected: false,
+    isSOSTimerActive: false,
+    sosTimerSeconds: 0,
+    lastSOSSentAt: null as number | null,
+  });
+
+  // User profile with emergency contacts
+  const [userProfile, setUserProfile] = useState<any>(null);
+
   // Refs for subscriptions and tracking state
   const locationSubscription = useRef<Location.LocationSubscription | null>(null);
   const pedometerSubscription = useRef<any>(null);
@@ -97,12 +124,56 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const altitudeHistoryRef = useRef<number[]>([]);
   const lastSmoothedAltitudeRef = useRef<number>(0);
 
+  // SOS refs
+  const fallDetectorRef = useRef<FallDetector | null>(null);
+  const sosTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const sosSentRef = useRef<boolean>(false); // Prevent duplicate sends
+
   const apiUrl = Constants.expoConfig?.extra?.API_URL || 'http://localhost:8000';
 
-  // Request permissions on mount
+  // Request permissions and load profile when user changes
   useEffect(() => {
     requestPermissions();
-  }, []);
+    // load cached profile quickly then refresh from network
+    const bootstrap = async () => {
+      // try cached profile first
+      try {
+        const cached = await AsyncStorage.getItem('trekky_profile');
+        if (cached) {
+          setUserProfile(JSON.parse(cached));
+          console.log('💾 Loaded cached user profile');
+        }
+      } catch (err) {
+        // ignore cache errors
+      }
+
+      // then fetch fresh profile if user is present
+      if (user?.mongo_uid) {
+        await fetchUserProfile();
+      }
+    };
+
+    bootstrap();
+  }, [user]);
+
+  // Fetch user profile with emergency contacts
+  const fetchUserProfile = async () => {
+    if (!user?.mongo_uid) return;
+
+    try {
+      const response = await axios.get(`${apiUrl}/api/users/profile/${user.mongo_uid}`);
+      setUserProfile(response.data);
+      try {
+        await AsyncStorage.setItem('trekky_profile', JSON.stringify(response.data));
+        console.log('💾 Cached user profile for offline SOS');
+      } catch (err) {
+        console.warn('⚠️ Failed to cache profile locally', err);
+      }
+      console.log('✅ User profile loaded for SOS');
+    } catch (err) {
+      console.error('❌ Failed to load user profile:', err);
+    }
+  };
 
   const requestPermissions = async () => {
     try {
@@ -416,6 +487,9 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }, 10000);
 
+      // Start fall detection
+      startFallDetection();
+
       console.log('✅ Trek started successfully:', trek._id);
     } catch (err: any) {
       console.error('❌ Error starting trek:', err);
@@ -480,6 +554,207 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  // ==================== SOS FUNCTIONS ====================
+
+  /**
+   * Start 10-second SOS countdown timer
+   */
+  const startSOSTimer = () => {
+    if (sosTimerRef.current) {
+      console.warn('⚠️ SOS timer already running');
+      return;
+    }
+
+    console.log('⏱️ Starting 10-second SOS timer...');
+    setSOSState(prev => ({
+      ...prev,
+      isFallDetected: true,
+      isSOSTimerActive: true,
+      sosTimerSeconds: 10,
+    }));
+
+    sosTimerRef.current = setInterval(() => {
+      setSOSState(prev => {
+        const newSeconds = prev.sosTimerSeconds - 1;
+
+        if (newSeconds <= 0) {
+          // Timer expired - send SOS
+          if (sosTimerRef.current) {
+            clearInterval(sosTimerRef.current);
+            sosTimerRef.current = null;
+          }
+          sendSOSInternal('fall');
+          return {
+            ...prev,
+            isSOSTimerActive: false,
+            sosTimerSeconds: 0,
+          };
+        }
+
+        return {
+          ...prev,
+          sosTimerSeconds: newSeconds,
+        };
+      });
+    }, 1000);
+  };
+
+  /**
+   * Cancel SOS timer (user is OK)
+   */
+  const cancelSOSTimer = () => {
+    console.log('✅ SOS timer cancelled by user');
+    
+    if (sosTimerRef.current) {
+      clearInterval(sosTimerRef.current);
+      sosTimerRef.current = null;
+    }
+
+    sosSentRef.current = false;
+
+    setSOSState({
+      isFallDetected: false,
+      isSOSTimerActive: false,
+      sosTimerSeconds: 0,
+      lastSOSSentAt: null,
+    });
+  };
+
+  /**
+   * Trigger manual SOS (immediate, no timer)
+   */
+  const triggerManualSOS = async () => {
+    console.log('🚨 Manual SOS triggered');
+    await sendSOSInternal('manual');
+  };
+
+  /**
+   * Internal SOS sender
+   */
+  const sendSOSInternal = async (triggerType: 'fall' | 'manual') => {
+    // Prevent duplicate sends
+    if (sosSentRef.current) {
+      console.warn('⚠️ SOS already sent, preventing duplicate');
+      return;
+    }
+
+    sosSentRef.current = true;
+
+    try {
+      console.log('📡 Sending SOS message...');
+
+      // Get current location
+      let location = currentLocation;
+      if (!location) {
+        const locResult = await getCurrentLocationForSOS();
+        if (locResult) {
+          location = {
+            ...locResult,
+            altitude: null,
+            accuracy: null,
+            speed: null,
+            heading: null,
+            timestamp: Date.now(),
+          };
+        }
+      }
+
+      if (!location) {
+        console.error('❌ Cannot send SOS: No location available');
+        setError('Cannot send SOS: Location unavailable');
+        sosSentRef.current = false;
+        return;
+      }
+
+      // Check emergency contacts
+      let emergencyContacts: Array<any> = [];
+      if (userProfile?.emergencyContact) {
+        emergencyContacts = [userProfile.emergencyContact];
+      } else {
+        // try reading cached profile as a fallback
+        try {
+          const cached = await AsyncStorage.getItem('trekky_profile');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            if (parsed?.emergencyContact) emergencyContacts = [parsed.emergencyContact];
+          }
+        } catch (err) {
+          console.warn('⚠️ Failed to read cached profile for SOS fallback', err);
+        }
+      }
+
+      if (emergencyContacts.length === 0 || !emergencyContacts[0]?.phone) {
+        console.error('❌ No emergency contacts configured');
+        setError('No emergency contacts configured. Please add them in your profile.');
+        sosSentRef.current = false;
+        return;
+      }
+
+      // Prepare SOS message
+      const sosMessage: SOSMessage = {
+        userName: user?.fullName || 'Unknown User',
+        latitude: location.latitude,
+        longitude: location.longitude,
+        timestamp: new Date().toLocaleString(),
+        triggerType,
+      };
+
+      // Send SMS via backend API (automatic, no user interaction)
+      const result = await sendSOSMessage(emergencyContacts, sosMessage, apiUrl);
+
+      if (result.success) {
+        console.log('✅ SOS sent successfully');
+        setSOSState(prev => ({
+          ...prev,
+          lastSOSSentAt: Date.now(),
+          isFallDetected: false,
+          isSOSTimerActive: false,
+          sosTimerSeconds: 0,
+        }));
+      } else {
+        console.error('❌ SOS send failed:', result.error);
+        setError(`SOS failed: ${result.error}`);
+        sosSentRef.current = false;
+      }
+    } catch (err: any) {
+      console.error('❌ Error sending SOS:', err);
+      setError(err.message);
+      sosSentRef.current = false;
+    }
+  };
+
+  /**
+   * Handle fall detection callback
+   */
+  const onFallDetected = () => {
+    console.log('🚨 Fall detected - starting SOS timer');
+    startSOSTimer();
+  };
+
+  /**
+   * Start fall detection when trek starts
+   */
+  const startFallDetection = () => {
+    if (!fallDetectorRef.current) {
+      fallDetectorRef.current = new FallDetector();
+    }
+    
+    fallDetectorRef.current.start(onFallDetected);
+    console.log('✅ Fall detection enabled for trek');
+  };
+
+  /**
+   * Stop fall detection when trek stops
+   */
+  const stopFallDetection = () => {
+    if (fallDetectorRef.current) {
+      fallDetectorRef.current.stop();
+      console.log('✅ Fall detection disabled');
+    }
+  };
+
+  // ==================== END SOS FUNCTIONS ====================
+
   const stopTrek = async (notes?: string): Promise<Trek | null> => {
     if (!currentTrek) return null;
 
@@ -511,6 +786,10 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
         metricsIntervalRef.current = null;
         console.log('✅ Metrics sync stopped');
       }
+
+      // Stop fall detection and cancel any active SOS timer
+      stopFallDetection();
+      cancelSOSTimer();
 
       // Complete trek on backend
       const response = await axios.post(`${apiUrl}/api/treks/${currentTrek._id}/complete`, {
@@ -573,6 +852,10 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (metricsIntervalRef.current) {
         clearInterval(metricsIntervalRef.current);
       }
+      if (sosTimerRef.current) {
+        clearInterval(sosTimerRef.current);
+      }
+      stopFallDetection();
     };
   }, []);
 
@@ -591,6 +874,9 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
         currentLocation,
         loading,
         error,
+        sosState,
+        triggerManualSOS,
+        cancelSOSTimer,
       }}
     >
       {children}

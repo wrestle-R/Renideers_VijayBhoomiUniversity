@@ -7,6 +7,8 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import { useTrek } from '@/context/TrekContext';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { useRouter } from 'expo-router';
+import { SOSButton } from '@/components/SOSButton';
+import { FallAlertModal } from '@/components/FallAlertModal';
 
 export default function MapScreen() {
   const router = useRouter();
@@ -209,6 +211,10 @@ export default function MapScreen() {
           </View>
         )}
       </View>
+
+      {/* SOS Components */}
+      <SOSButton />
+      <FallAlertModal />
     </ThemedView>
   );
 }

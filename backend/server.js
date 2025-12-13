@@ -16,6 +16,7 @@ const aiRoutes = require('./routes/aiRoutes');
 const activityRoutes = require('./routes/activityRoutes');
 const trekPhotoRoutes = require('./routes/trekPhotoRoutes');
 const badgeRoutes = require('./routes/badgeRoutes');
+const emergencyRoutes = require('./routes/emergencyRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -46,6 +47,7 @@ app.use('/api/clubs', clubRoutes);
 app.use('/api/activities', activityRoutes);
 app.use('/api/ai', aiRoutes);
 app.use('/api/badges', badgeRoutes);
+app.use('/api/emergency', emergencyRoutes);
 app.use('/api', trekPhotoRoutes);
 
 // ---------- DB & SERVER ----------
