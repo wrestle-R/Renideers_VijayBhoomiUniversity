@@ -23,7 +23,6 @@ export function UserSidebar() {
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/dashboard" },
     { icon: Compass, label: "Community", path: "/explore" },
-    { icon: Camera, label: "Trek AI", path: "/trek-ai" },
     { icon: Mountain, label: "Treks", path: "/treks" },
     { icon: Users, label: "Clubs", path: "/clubs" },
     

@@ -57,7 +57,11 @@ export function ActivityFeed() {
   return (
     <div className="space-y-4">
       {activities.map((activity) => (
-        <Card key={activity._id}>
+        <Card 
+          key={activity._id} 
+          className="cursor-pointer hover:shadow-md transition-shadow"
+          onClick={() => navigate(`/activity/${activity._id}`)}
+        >
           <CardHeader className="flex flex-row items-center gap-4 pb-2">
             <Avatar>
               <AvatarImage src={activity.userId?.photoUrl} />
@@ -93,7 +97,7 @@ export function ActivityFeed() {
               <div className="flex flex-col items-center gap-1 p-2 bg-muted/50 rounded-lg">
                 <Clock className="h-4 w-4 text-primary" />
                 <span className="font-medium">
-                  {formatDuration(activity.summary?.duration || 0)}
+                  {formatDuration(activity.summary?.duration || activity.duration || 0, activity.startTime, activity.endTime)}
                 </span>
                 <span className="text-xs">Duration</span>
               </div>
@@ -112,9 +116,34 @@ export function ActivityFeed() {
   );
 }
 
-function formatDuration(seconds) {
-  const h = Math.floor(seconds / 3600);
-  const m = Math.floor((seconds % 3600) / 60);
-  if (h > 0) return `${h}h ${m}m`;
-  return `${m}m`;
+function formatDuration(durationInSeconds, startTime, endTime) {
+  let seconds = durationInSeconds;
+  
+  // If duration is 0 or not provided, calculate from timestamps
+  if (!seconds || seconds === 0) {
+    if (startTime && endTime) {
+      const start = new Date(startTime).getTime();
+      const end = new Date(endTime).getTime();
+      seconds = Math.floor((end - start) / 1000);
+    } else {
+      return "N/A";
+    }
+  }
+  
+  // Ensure we have a valid number
+  if (typeof seconds !== 'number' || seconds < 0) {
+    return "N/A";
+  }
+  
+  const hours = Math.floor(seconds / 3600);
+  const minutes = Math.floor((seconds % 3600) / 60);
+  const secs = Math.floor(seconds % 60);
+  
+  if (hours > 0) {
+    return `${hours}h ${minutes}m`;
+  } else if (minutes > 0) {
+    return `${minutes}m`;
+  } else {
+    return `${secs}s`;
+  }
 }

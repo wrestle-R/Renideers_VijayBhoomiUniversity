@@ -10,6 +10,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { ActivityFeed } from "../../components/ActivityFeed";
+import { useDashboardViewMode } from "../../hooks/useDashboardViewMode";
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -18,7 +19,7 @@ export default function Dashboard() {
   const [friends, setFriends] = useState([]);
   const [profileComplete, setProfileComplete] = useState(false);
   const [profileLoading, setProfileLoading] = useState(true);
-  const [viewMode, setViewMode] = useState('dashboard');
+  const [viewMode, setViewMode] = useDashboardViewMode('dashboard');
   const [pendingRequests, setPendingRequests] = useState([]);
 
   useEffect(() => {
@@ -102,6 +103,7 @@ export default function Dashboard() {
                   variant={viewMode === 'dashboard' ? 'default' : 'ghost'} 
                   size="sm" 
                   onClick={() => setViewMode('dashboard')}
+                  className="cursor-pointer"
                 >
                   Dashboard
                 </Button>
@@ -109,6 +111,7 @@ export default function Dashboard() {
                   variant={viewMode === 'feed' ? 'default' : 'ghost'} 
                   size="sm" 
                   onClick={() => setViewMode('feed')}
+                  className="cursor-pointer"
                 >
                   Feed
                 </Button>
