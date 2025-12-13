@@ -11,6 +11,7 @@ import { SidebarProvider } from "../components/ui/sidebar";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "../components/ui/dialog";
 import { Badge } from "../components/ui/badge";
+import { ActivityStatsCalendar } from "../components/ActivityStatsCalendar";
 
 export default function MyActivities() {
   const { user } = useUser();
@@ -432,11 +433,11 @@ export default function MyActivities() {
                   {detailedStats.map((stat, index) => (
                     <Card 
                       key={index} 
-                      className={`overflow-hidden ${stat.label === "Consistency" ? "cursor-pointer hover:shadow-lg hover:border-primary/50 transition-all" : "hover:shadow-md transition-shadow"}`}
+                      className={`overflow-hidden border-2 ${stat.label === "Consistency" ? "border-purple-200/30 dark:border-purple-700/30 cursor-pointer hover:shadow-lg hover:border-purple-500 transition-all" : "border-purple-200/20 dark:border-purple-700/20 hover:shadow-md transition-shadow hover:border-purple-200/40"}`}
                       onClick={() => stat.label === "Consistency" && handleConsistencyClick()}
                     >
                       <CardContent className="p-4 flex flex-col items-center justify-center text-center space-y-2">
-                        <div className={`p-2 rounded-full bg-muted ${stat.color.replace('text-', 'bg-').replace('500', '100')} dark:bg-opacity-20`}>
+                        <div className={`p-2 rounded-full ${stat.color === "text-blue-500" ? "bg-blue-100 dark:bg-blue-900/30" : stat.color === "text-green-500" ? "bg-green-100 dark:bg-green-900/30" : stat.color === "text-orange-500" ? "bg-orange-100 dark:bg-orange-900/30" : "bg-purple-100 dark:bg-purple-900/30"}`}>
                           <stat.icon className={`h-5 w-5 ${stat.color}`} />
                         </div>
                         <div>
@@ -448,112 +449,12 @@ export default function MyActivities() {
                   ))}
                 </div>
 
-                {/* Calendar Section */}
-                <Card>
-                  <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-lg">Activity Calendar</CardTitle>
-                    <div className="flex items-center gap-1 bg-muted rounded-md p-0.5">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() - 1)))}>
-                        <ChevronLeft className="h-3 w-3" />
-                      </Button>
-                      <span className="text-xs font-medium min-w-[60px] text-center">
-                        {currentDate.toLocaleString('default', { month: 'short', year: '2-digit' })}
-                      </span>
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setCurrentDate(new Date(currentDate.setMonth(currentDate.getMonth() + 1)))}>
-                        <ChevronRight className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid grid-cols-7 gap-1 text-center mb-2">
-                      {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((d, idx) => (
-                        <div key={`day-${idx}`} className="text-[10px] font-bold text-muted-foreground">{d}</div>
-                      ))}
-                    </div>
-                    <div className="grid grid-cols-7 gap-1 place-items-center">
-                      {renderCalendar()}
-                    </div>
-                    <div className="mt-4 flex items-center justify-center gap-4 text-xs text-muted-foreground">
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-primary"></div>
-                        <span>Activity</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <div className="w-2 h-2 rounded-full bg-muted"></div>
-                        <span>Rest</span>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                {/* Last 30 Days Chart */}
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Last 30 Days Activity</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="h-[300px] w-full" style={{minHeight: '300px', display: 'flex'}}>
-                      <ResponsiveContainer width="100%" height={300}>
-                        <AreaChart data={last30DaysData}>
-                          <defs>
-                            <linearGradient id="colorDistance" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor="#8884d8" stopOpacity={0.8}/>
-                              <stop offset="95%" stopColor="#8884d8" stopOpacity={0}/>
-                            </linearGradient>
-                          </defs>
-                          <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e5e7eb" />
-                          <XAxis 
-                            dataKey="date" 
-                            tick={{fontSize: 12}} 
-                            tickLine={false}
-                            axisLine={false}
-                            interval={6}
-                          />
-                          <YAxis 
-                            tick={{fontSize: 12}} 
-                            tickLine={false}
-                            axisLine={false}
-                            unit=" km"
-                          />
-                          <Tooltip 
-                            contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                          />
-                          <Area 
-                            type="monotone" 
-                            dataKey="distance" 
-                            stroke="#8884d8" 
-                            fillOpacity={1} 
-                            fill="url(#colorDistance)" 
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </CardContent>
-                </Card>
-                
-                {/* Progress Bar Section */}
-                 <Card>
-                  <CardHeader>
-                    <CardTitle>Monthly Goal Progress</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm font-medium">
-                        <span>{monthlyStats.totalDistance ? (monthlyStats.totalDistance / 1000).toFixed(1) : 0} km</span>
-                        <span className="text-muted-foreground">Goal: 100 km</span>
-                      </div>
-                      <div className="h-3 w-full bg-secondary rounded-full overflow-hidden">
-                        <div 
-                          className="h-full bg-gradient-to-r from-blue-500 to-purple-500 transition-all duration-1000 ease-out"
-                          style={{ width: `${Math.min(((monthlyStats.totalDistance / 1000) / 100) * 100, 100)}%` }}
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground text-right">
-                        {Math.max(0, 100 - (monthlyStats.totalDistance / 1000)).toFixed(1)} km to go!
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
+                {/* New Activity Stats Calendar Component */}
+                <ActivityStatsCalendar 
+                  last30DaysData={last30DaysData}
+                  monthlyStats={monthlyStats}
+                  activities={activities}
+                />
               </div>
             )}
           </div>
