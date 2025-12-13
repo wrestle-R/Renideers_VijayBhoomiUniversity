@@ -46,6 +46,12 @@ export default function Profiles() {
           instagram: data.socialLinks?.instagram || "",
           twitter: data.socialLinks?.twitter || "",
           visibility: data.visibility || "private"
+          ,
+          // emergency contact fields
+          emergencyName: data.emergencyContact?.name || "",
+          emergencyPhone: data.emergencyContact?.phone || "",
+          emergencyAltPhone: data.emergencyContact?.altPhone || "",
+          emergencyRelationship: data.emergencyContact?.relationship || "",
         });
       }
     } catch (error) {
@@ -97,6 +103,12 @@ export default function Profiles() {
           website: normalizeWebsite(formData.website),
           instagram: formData.instagram,
           twitter: formData.twitter
+        },
+        emergencyContact: {
+          name: formData.emergencyName || undefined,
+          phone: formData.emergencyPhone || undefined,
+          altPhone: formData.emergencyAltPhone || undefined,
+          relationship: formData.emergencyRelationship || undefined,
         },
         visibility: formData.visibility
       };
@@ -186,6 +198,16 @@ export default function Profiles() {
                       <Input name="website" value={formData.website} onChange={handleChange} placeholder="Website URL" className="border border-input" />
                       <Input name="instagram" value={formData.instagram} onChange={handleChange} placeholder="Instagram Handle" className="border border-input" />
                       <Input name="twitter" value={formData.twitter} onChange={handleChange} placeholder="Twitter Handle" className="border border-input" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Emergency Contact</Label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <Input name="emergencyName" value={formData.emergencyName || ""} onChange={handleChange} placeholder="Full name" className="border border-input" />
+                      <Input name="emergencyRelationship" value={formData.emergencyRelationship || ""} onChange={handleChange} placeholder="Relationship (e.g. spouse)" className="border border-input" />
+                      <Input name="emergencyPhone" value={formData.emergencyPhone || ""} onChange={handleChange} placeholder="Primary phone" className="border border-input" />
+                      <Input name="emergencyAltPhone" value={formData.emergencyAltPhone || ""} onChange={handleChange} placeholder="Alternate phone" className="border border-input" />
                     </div>
                   </div>
 

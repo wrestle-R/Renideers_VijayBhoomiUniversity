@@ -38,6 +38,14 @@ const ProfileSchema = new mongoose.Schema({
     preferredTrails: [PreferredTrailSchema],
     badges: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Badge' }],
 
+    // emergency contact information for safety / rescue
+    emergencyContact: {
+        name: { type: String, trim: true },
+        phone: { type: String, trim: true },
+        altPhone: { type: String, trim: true },
+        relationship: { type: String, trim: true },
+    },
+
     // rewards & verification metadata
     rewards: {
         tokensEarned: { type: Number, default: 0 },

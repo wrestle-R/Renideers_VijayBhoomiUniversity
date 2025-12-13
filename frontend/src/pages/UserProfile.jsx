@@ -35,6 +35,8 @@ const UserProfile = () => {
   if (!profile) return <div className="text-foreground p-6">User not found</div>;
 
   const userDetails = profile.user_id || {};
+  const badges = profile.badges || [];
+  const emergency = profile.emergencyContact || null;
 
   return (
     <div className="flex">
@@ -66,6 +68,18 @@ const UserProfile = () => {
               <div>
                 <h3 className="font-semibold text-foreground">Experience Level</h3>
                 <p className="capitalize text-foreground">{profile.experienceLevel}</p>
+              </div>
+              <div>
+                <h3 className="font-semibold text-foreground">Emergency Contact</h3>
+                {emergency ? (
+                  <p className="text-foreground">
+                    {emergency.name} {emergency.relationship ? `— ${emergency.relationship}` : ''}
+                    {emergency.phone ? ` • ${emergency.phone}` : ''}
+                    {emergency.altPhone ? ` / ${emergency.altPhone}` : ''}
+                  </p>
+                ) : (
+                  <p className="text-muted-foreground">No emergency contact provided.</p>
+                )}
               </div>
             </div>
 
