@@ -17,6 +17,7 @@ const activityRoutes = require('./routes/activityRoutes');
 const trekPhotoRoutes = require('./routes/trekPhotoRoutes');
 const badgeRoutes = require('./routes/badgeRoutes');
 const emergencyRoutes = require('./routes/emergencyRoutes');
+const whatsappRoutes = require('./routes/whatsappRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -37,6 +38,8 @@ app.use(
 );
 
 app.use(express.json({ limit: '10mb' }));
+// Twilio webhooks send application/x-www-form-urlencoded payloads
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // ---------- ROUTES ----------
@@ -49,6 +52,7 @@ app.use('/api/ai', aiRoutes);
 app.use('/api/badges', badgeRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api', trekPhotoRoutes);
+app.use('/api/whatsapp', whatsappRoutes);
 
 // ---------- DB & SERVER ----------
 connectDB();

@@ -95,6 +95,14 @@ exports.optimizeItinerary = async (req, res) => {
   }
 };
 
+// Programmatic helper used by other controllers. Returns itinerary string.
+exports.optimizeItineraryInternal = async (treks = [], startDate = 'ASAP', duration = 3) => {
+  const safeTreks = Array.isArray(treks) ? treks.slice(0, 12) : (typeof treks === 'string' ? treks.split(',').map(s => s.trim()).slice(0,12) : []);
+  const prompt = `I want to do these treks: ${safeTreks.join(', ')} starting ${startDate} for ${duration} days. Suggest an optimized itinerary order with rest days.`;
+  const itinerary = await callGroq('You are a logistics expert.', prompt);
+  return itinerary;
+};
+
 // 5. AI Difficulty Estimator
 exports.estimateDifficulty = async (req, res) => {
   try {
@@ -105,4 +113,20 @@ exports.estimateDifficulty = async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: "Estimation failed" });
   }
+};
+
+/**
+ * Programmatic helper to generate an itinerary string using the AI pipeline.
+ * This is exported so other controllers (WhatsApp webhook) can reuse it.
+ * Limits treks to a safe number to avoid excessively long prompts.
+ */
+exports.generateItinerary = async (treks = [], startDate = 'ASAP', duration = 3) => {
+  const safeTreks = Array.isArray(treks)
+    ? treks.slice(0, 12)
+    : (typeof treks === 'string' ? treks.split(',').map(s => s.trim()).slice(0, 12) : []);
+
+  const prompt = `I want to do these treks: ${safeTreks.join(', ')} starting ${startDate} for ${duration} days. Suggest an optimized itinerary order with rest days.`;
+  const itinerary = await callGroq('You are a logistics expert.', prompt);
+  console.log(itinerary)
+  return itinerary;
 };
