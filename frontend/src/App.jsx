@@ -23,7 +23,6 @@ import { AIChatbot } from "./components/AIChatbot";
 import Badges from "./pages/Badges";
 import ActivityDetail from "./pages/ActivityDetail";
 import MyActivities from "./pages/MyActivities";
-import ActivityDetail from "./pages/ActivityDetail"
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useUser();
