@@ -60,20 +60,32 @@ export function ActivityFeed() {
       {activities.map((activity) => (
         <Card 
           key={activity._id} 
-          className="cursor-pointer hover:shadow-md transition-shadow"
+          className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:border-primary/20"
           onClick={() => navigate(`/activity/${activity._id}`)}
         >
-          <CardHeader className="flex flex-row items-center gap-4 pb-2">
-            <Avatar>
-              <AvatarImage src={activity.userId?.photoUrl} />
-              <AvatarFallback>{activity.userId?.fullName?.charAt(0)}</AvatarFallback>
-            </Avatar>
-            <div className="flex flex-col">
-              <span className="font-semibold">{activity.userId?.fullName}</span>
-              <span className="text-xs text-muted-foreground">
-                {new Date(activity.startTime).toLocaleString()}
-              </span>
+          <CardHeader className="flex flex-row items-center justify-between pb-4">
+            <div className="flex items-center gap-4 flex-1">
+              <Avatar>
+                <AvatarImage src={activity.userId?.photoUrl} />
+                <AvatarFallback>{activity.userId?.fullName?.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col flex-1">
+                <span className="font-semibold">{activity.userId?.fullName}</span>
+                <span className="text-xs text-muted-foreground">
+                  {new Date(activity.startTime).toLocaleString()}
+                </span>
+              </div>
             </div>
+            <button 
+              onClick={(e) => {
+                e.stopPropagation();
+                navigate(`/activity/${activity._id}/map`);
+              }}
+              className="gap-2 flex items-center bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 text-primary-foreground shadow-md hover:shadow-lg transition-all duration-200 rounded-full px-6 py-2 text-sm font-semibold flex-shrink-0"
+            >
+              <MapPin className="h-5 w-5" />
+              <span>Maps</span>
+            </button>
           </CardHeader>
           <CardContent>
             <div className="flex items-center gap-2 mb-2">
@@ -87,32 +99,29 @@ export function ActivityFeed() {
               </p>
             )}
 
-            <div className="grid grid-cols-3 gap-4 text-sm text-muted-foreground mt-4">
-              <div className="flex flex-col items-center gap-1 p-2 bg-muted/50 rounded-lg">
+            <div className="grid grid-cols-3 gap-3 text-sm mt-4">
+              <div className="flex flex-col items-center gap-1 p-3 bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg border border-primary/10 hover:border-primary/20 transition-colors">
                 <MapPin className="h-4 w-4 text-primary" />
-                <span className="font-medium">
-                  {activity.summary?.totalDistance ? (activity.summary.totalDistance / 1000).toFixed(2) : 0} km
+                <span className="font-bold text-foreground">
+                  {activity.summary?.totalDistance ? (activity.summary.totalDistance / 1000).toFixed(2) : 0}
                 </span>
-                <span className="text-xs">Distance</span>
+                <span className="text-xs text-muted-foreground">km</span>
               </div>
-              <div className="flex flex-col items-center gap-1 p-2 bg-muted/50 rounded-lg">
+              <div className="flex flex-col items-center gap-1 p-3 bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg border border-primary/10 hover:border-primary/20 transition-colors">
                 <Clock className="h-4 w-4 text-primary" />
-                <span className="font-medium">
+                <span className="font-bold text-foreground text-sm">
                   {formatDuration(activity.summary?.duration || activity.duration || 0, activity.startTime, activity.endTime)}
                 </span>
-                <span className="text-xs">Duration</span>
+                <span className="text-xs text-muted-foreground">time</span>
               </div>
-              <div className="flex flex-col items-center gap-1 p-2 bg-muted/50 rounded-lg">
+              <div className="flex flex-col items-center gap-1 p-3 bg-gradient-to-br from-primary/5 to-primary/10 rounded-lg border border-primary/10 hover:border-primary/20 transition-colors">
                 <Calendar className="h-4 w-4 text-primary" />
-                <span className="font-medium">
-                  {new Date(activity.startTime).toLocaleDateString()}
+                <span className="font-bold text-foreground">
+                  {new Date(activity.startTime).getDate()}
                 </span>
-                <span className="text-xs">Date</span>
+                <span className="text-xs text-muted-foreground">{new Date(activity.startTime).toLocaleString('default', { month: 'short' })}</span>
               </div>
             </div>
-            <Button onClick={() => navigate(`/activity/${activity._id}`)}>
-              View Map & Details
-            </Button>
           </CardContent>
         </Card>
       ))}

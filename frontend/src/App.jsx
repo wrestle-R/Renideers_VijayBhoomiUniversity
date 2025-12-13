@@ -21,7 +21,8 @@ import Clubs from "./pages/Dashboard/Clubs";
 import ClubDetails from "./pages/Dashboard/ClubDetails";
 import { AIChatbot } from "./components/AIChatbot";
 import Badges from "./pages/Badges";
-import ActivityDetail from "./pages/ActivityDetail";
+import ActivityDetailMap from "./pages/ActivityDetailMap";
+import ActivityDetailStats from "./pages/ActivityDetailStats";
 import MyActivities from "./pages/MyActivities";
 
 const ProtectedRoute = ({ children }) => {
@@ -127,7 +128,15 @@ function AppRoutes() {
         path="/activity/:id" 
         element={
           <ProtectedRoute>
-            <ActivityDetail />
+            <ActivityDetailStats />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/activity/:id/map" 
+        element={
+          <ProtectedRoute>
+            <ActivityDetailMap />
           </ProtectedRoute>
         } 
       />
@@ -139,14 +148,7 @@ function AppRoutes() {
           </ProtectedRoute>
         } 
       />
-      <Route
-        path="/activity/:id"
-        element={
-          <ProtectedRoute>
-            <ActivityDetail />
-          </ProtectedRoute>
-        }
-      />
+
       <Route 
         path="/clubs" 
         element={

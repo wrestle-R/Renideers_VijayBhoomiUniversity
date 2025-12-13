@@ -9,6 +9,7 @@ import {
   Clock, TrendingUp, Footprints, Mountain, Timer, Zap,
   ChevronUp, ChevronDown
 } from "lucide-react"
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts"
 
 import { MapContainer, TileLayer, Polyline, CircleMarker, Popup, useMap } from "react-leaflet"
 import "leaflet/dist/leaflet.css"
@@ -443,7 +444,7 @@ export default function ActivityDetail() {
           {!loading && hasData && (
             <>
               {/* Map Container */}
-              <div className="absolute inset-0 z-0">
+              <div className="absolute inset-0 z-0 shadow-2xl shadow-black/40">
                 {viewMode === "2d" ? (
                   <MapContainer
                     center={start}
@@ -575,7 +576,7 @@ export default function ActivityDetail() {
                     <Button 
                       variant="ghost" 
                       size="icon"
-                      onClick={() => navigate(-1)} 
+                      onClick={() => navigate(`/activity/${id}`)} 
                       className="h-10 w-10 rounded-full bg-black/40 backdrop-blur-md border border-white/10 text-white hover:bg-black/60 hover:text-white"
                     >
                       <ArrowLeft className="w-5 h-5" />
@@ -685,7 +686,7 @@ export default function ActivityDetail() {
                       </div>
 
                       {/* Playback controls */}
-                      <div className="flex items-center justify-center gap-3">
+                      <div className="flex items-center justify-center gap-3 mb-4">
                         <Button
                           variant="ghost"
                           size="icon"
@@ -706,6 +707,43 @@ export default function ActivityDetail() {
                           {progress}%
                         </div>
                       </div>
+
+                      {/* Split Breakdown Chart */}
+                      {activity?.splits && activity.splits.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-white/10">
+                          <p className="text-white/80 text-sm font-semibold mb-3">Split Breakdown (Speed per km)</p>
+                          <div className="h-[200px] w-full">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <BarChart data={activity.splits.map((split, idx) => ({
+                                name: `km ${idx + 1}`,
+                                speed: split.time > 0 ? ((split.distance / split.time) * 3.6).toFixed(1) : 0
+                              }))}>
+                                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.1)" />
+                                <XAxis 
+                                  dataKey="name" 
+                                  tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
+                                  stroke="rgba(255,255,255,0.2)"
+                                />
+                                <YAxis 
+                                  tick={{ fill: 'rgba(255,255,255,0.6)', fontSize: 12 }}
+                                  stroke="rgba(255,255,255,0.2)"
+                                  label={{ value: 'km/h', angle: -90, position: 'insideLeft', fill: 'rgba(255,255,255,0.6)', offset: 10 }}
+                                />
+                                <Tooltip 
+                                  contentStyle={{ 
+                                    backgroundColor: 'rgba(0,0,0,0.8)',
+                                    border: '1px solid rgba(255,255,255,0.2)',
+                                    borderRadius: '8px',
+                                    color: '#fff'
+                                  }}
+                                  formatter={(value) => [`${value} km/h`, 'Speed']}
+                                />
+                                <Bar dataKey="speed" fill="#ec4899" radius={[6, 6, 0, 0]} />
+                              </BarChart>
+                            </ResponsiveContainer>
+                          </div>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
