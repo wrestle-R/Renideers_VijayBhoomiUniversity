@@ -15,6 +15,7 @@ const TrekDetail = () => {
   const [trek, setTrek] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [aiSummary, setAiSummary] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -114,7 +115,7 @@ const TrekDetail = () => {
             </div>
           )}
 
-              <div className="space-y-8">
+                <div className="space-y-8">
                 <div>
                   <h1 className="text-4xl font-bold mb-2">{trek.title}</h1>
                   <p className="text-xl text-muted-foreground flex items-center gap-2">
@@ -166,7 +167,7 @@ const TrekDetail = () => {
                 <div>
                   <h3 className="text-2xl font-semibold mb-4">Highlights</h3>
                   <ul className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                    {trek.highlights.map((h, i) => (
+                    {trek.highlights?.map((h, i) => (
                       <li key={i} className="flex items-start gap-2">
                         <span className="mt-2 w-1.5 h-1.5 rounded-full bg-primary flex-shrink-0" />
                         <span>{h}</span>
@@ -178,7 +179,7 @@ const TrekDetail = () => {
                 <div>
                   <h3 className="text-2xl font-semibold mb-4">Itinerary</h3>
                   <div className="space-y-4">
-                    {trek.itinerary.map((it, i) => (
+                    {trek.itinerary?.map((it, i) => (
                       <div key={i} className="flex gap-4">
                         <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-sm">
                           {i + 1}
@@ -196,18 +197,8 @@ const TrekDetail = () => {
                   </div>
                 </div>
               </div>
-            </section>
 
-            {/* IN-DEPTH */}
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">
-                In-Depth Details
-              </h2>
-              <p className="whitespace-pre-line text-muted-foreground">
-                {trek.inDepthDescription}
-              </p>
-            </section>
-          </div>
+          
         </main>
       </div>
     </SidebarProvider>
