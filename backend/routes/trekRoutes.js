@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const Activity = require('../models/activity');
 const User = require('../models/User');
+const UserProfile = require('../models/UserProfiles');
 const trekController = require('../controllers/trekController');
 const Badge = require('../models/Badge');
 
@@ -14,6 +15,8 @@ async function getEarnableBadges(profile) {
 
 // Call this after marking an activity as completed
 async function checkAndAwardBadges(userId, activity) {
+  // Guard: ensure UserProfile model exists and userId provided
+  if (!UserProfile || !userId) return [];
   const profile = await UserProfile.findOne({ user_id: userId }).populate('badges');
   if (!profile) return [];
   const earnable = await getEarnableBadges(profile);
@@ -225,7 +228,14 @@ router.post('/:trekId/complete', async (req, res) => {
 
     await activity.save();
 
-    const newBadges = await checkAndAwardBadges(activity.userId, activity);
+    let newBadges = [];
+    try {
+      newBadges = await checkAndAwardBadges(activity.userId, activity);
+    } catch (badgeErr) {
+      console.error('Error awarding badges (non-fatal):', badgeErr);
+      // proceed without failing the complete request
+      newBadges = [];
+    }
 
     res.json({
       success: true,
