@@ -15,6 +15,7 @@ export default function Profiles() {
     username: "",
     bio: "",
     location: "",
+    phoneNumber: "",
     experienceLevel: "beginner",
     goals: "",
     motivations: "",
@@ -39,6 +40,7 @@ export default function Profiles() {
           username: data.username || "",
           bio: data.bio || "",
           location: data.location || "",
+          phoneNumber: data.phoneNumber || "",
           experienceLevel: data.experienceLevel || "beginner",
           goals: data.goals ? data.goals.join(", ") : "",
           motivations: data.motivations ? data.motivations.join(", ") : "",
@@ -96,6 +98,7 @@ export default function Profiles() {
         username: formData.username,
         bio: formData.bio,
         location: formData.location,
+        phoneNumber: formData.phoneNumber,
         experienceLevel: formData.experienceLevel,
         goals: formData.goals.split(",").map(s => s.trim()).filter(Boolean),
         motivations: formData.motivations.split(",").map(s => s.trim()).filter(Boolean),
@@ -152,21 +155,27 @@ export default function Profiles() {
                   
                   <div className="space-y-2">
                     <Label htmlFor="username">Username</Label>
-                    <Input id="username" name="username" value={formData.username} onChange={handleChange} placeholder="username" className="border border-input" />
+                    <Input id="username" name="username" value={formData.username} onChange={handleChange} placeholder="username" className="fancy-input" />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="bio">Bio</Label>
-                    <Input id="bio" name="bio" value={formData.bio} onChange={handleChange} placeholder="Tell us about yourself" className="border border-input" />
+                    <Input id="bio" name="bio" value={formData.bio} onChange={handleChange} placeholder="Tell us about yourself" className="fancy-input" />
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="location">Location</Label>
-                      <Input id="location" name="location" value={formData.location} onChange={handleChange} placeholder="City, Country" className="border border-input" />
+                      <Input id="location" name="location" value={formData.location} onChange={handleChange} placeholder="City, Country" className="fancy-input" />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="experienceLevel">Experience Level</Label>
+                      <Label htmlFor="phoneNumber">Phone Number</Label>
+                      <Input id="phoneNumber" name="phoneNumber" value={formData.phoneNumber} onChange={handleChange} placeholder="+1234567890" className="fancy-input" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="experienceLevel">Experience Level</Label>
                       <select 
                         id="experienceLevel" 
                         name="experienceLevel" 
@@ -179,35 +188,34 @@ export default function Profiles() {
                         <option value="advanced">Advanced</option>
                         <option value="expert">Expert</option>
                       </select>
-                    </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="goals">Goals (comma separated)</Label>
-                    <Input id="goals" name="goals" value={formData.goals} onChange={handleChange} placeholder="e.g. Hike Everest, Run 5k" className="border border-input" />
+                    <Input id="goals" name="goals" value={formData.goals} onChange={handleChange} placeholder="e.g. Hike Everest, Run 5k" className="fancy-input" />
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="motivations">Motivations (comma separated)</Label>
-                    <Input id="motivations" name="motivations" value={formData.motivations} onChange={handleChange} placeholder="e.g. Fitness, Nature" className="border border-input" />
+                    <Input id="motivations" name="motivations" value={formData.motivations} onChange={handleChange} placeholder="e.g. Fitness, Nature" className="fancy-input" />
                   </div>
 
                   <div className="space-y-2">
                     <Label>Social Links</Label>
                     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <Input name="website" value={formData.website} onChange={handleChange} placeholder="Website URL" className="border border-input" />
-                      <Input name="instagram" value={formData.instagram} onChange={handleChange} placeholder="Instagram Handle" className="border border-input" />
-                      <Input name="twitter" value={formData.twitter} onChange={handleChange} placeholder="Twitter Handle" className="border border-input" />
+                      <Input name="website" value={formData.website} onChange={handleChange} placeholder="Website URL" className="fancy-input" />
+                      <Input name="instagram" value={formData.instagram} onChange={handleChange} placeholder="Instagram Handle" className="fancy-input" />
+                      <Input name="twitter" value={formData.twitter} onChange={handleChange} placeholder="Twitter Handle" className="fancy-input" />
                     </div>
                   </div>
 
                   <div className="space-y-2">
                     <Label>Emergency Contact</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <Input name="emergencyName" value={formData.emergencyName || ""} onChange={handleChange} placeholder="Full name" className="border border-input" />
-                      <Input name="emergencyRelationship" value={formData.emergencyRelationship || ""} onChange={handleChange} placeholder="Relationship (e.g. spouse)" className="border border-input" />
-                      <Input name="emergencyPhone" value={formData.emergencyPhone || ""} onChange={handleChange} placeholder="Primary phone" className="border border-input" />
-                      <Input name="emergencyAltPhone" value={formData.emergencyAltPhone || ""} onChange={handleChange} placeholder="Alternate phone" className="border border-input" />
+                      <Input name="emergencyName" value={formData.emergencyName || ""} onChange={handleChange} placeholder="Full name" className="fancy-input" />
+                      <Input name="emergencyRelationship" value={formData.emergencyRelationship || ""} onChange={handleChange} placeholder="Relationship (e.g. spouse)" className="fancy-input" />
+                      <Input name="emergencyPhone" value={formData.emergencyPhone || ""} onChange={handleChange} placeholder="Primary phone" className="fancy-input" />
+                      <Input name="emergencyAltPhone" value={formData.emergencyAltPhone || ""} onChange={handleChange} placeholder="Alternate phone" className="fancy-input" />
                     </div>
                   </div>
 

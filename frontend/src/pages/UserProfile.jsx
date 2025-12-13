@@ -51,6 +51,8 @@ const UserProfile = () => {
             <div>
               <CardTitle className="text-2xl text-foreground">{userDetails.fullName}</CardTitle>
               <p className="text-muted-foreground">{userDetails.email}</p>
+              {profile.phoneNumber && <p className="text-muted-foreground">{profile.phoneNumber}</p>}
+              {profile.location && <p className="text-muted-foreground">{profile.location}</p>}
               <p className="mt-2 text-foreground">{profile.bio}</p>
             </div>
           </CardHeader>

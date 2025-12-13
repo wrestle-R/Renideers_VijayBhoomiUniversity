@@ -28,6 +28,7 @@ const ProfileSchema = new mongoose.Schema({
 
     // optional user details
     location: { type: String, trim: true },
+    phoneNumber: { type: String, trim: true },
 
     experienceLevel: {
         type: String,
