@@ -25,8 +25,8 @@ export function UserSidebar() {
     { icon: Activity, label: "My Activities", path: "/my-activities" },
     { icon: Compass, label: "Community", path: "/explore" },
     { icon: Mountain, label: "Treks", path: "/treks" },
-    { icon: Users, label: "Clubs", path: "/clubs" },
     { icon: Camera, label: "Trek Vision", path: "/trek-ai" },
+    { icon: Users, label: "Clubs", path: "/clubs" },
     { icon: Users, label:"Badges", path:"/badges"},
   ];
 
