@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { Platform } from 'react-native';
 import * as Location from 'expo-location';
 import { Pedometer } from 'expo-sensors';
 import axios from 'axios';
@@ -425,11 +426,21 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
         start.setHours(0, 0, 0, 0);
 
         try {
-          const pastSteps = await Pedometer.getStepCountAsync(start, end);
-          initialStepsRef.current = pastSteps.steps;
-          console.log('📊 Initial step count:', pastSteps.steps);
+          // NOTE: `Pedometer.getStepCountAsync(start, end)` is not supported on
+          // Android for historical ranges (throws "Getting step count for date range is not supported on Android yet").
+          // To keep behavior consistent across platforms we:
+          // - on iOS: read today's baseline steps and subtract from live updates
+          // - on Android: fall back to 0 baseline and rely on real-time watchStepCount
+          if (Platform.OS === 'android') {
+            initialStepsRef.current = 0;
+            console.warn('⚠️ Pedometer.getStepCountAsync not supported on Android; starting step baseline at 0');
+          } else {
+            const pastSteps = await Pedometer.getStepCountAsync(start, end);
+            initialStepsRef.current = pastSteps.steps || 0;
+            console.log('📊 Initial step count:', pastSteps.steps);
+          }
 
-          // Watch for real-time step updates
+          // Watch for real-time step updates (works on both platforms)
           pedometerSubscription.current = Pedometer.watchStepCount((result) => {
             if (isPausedRef.current) return;
 
@@ -444,6 +455,17 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
         } catch (err) {
           console.error('❌ Pedometer error:', err);
+          // If historical read fails, ensure we still subscribe to live updates
+          try {
+            pedometerSubscription.current = Pedometer.watchStepCount((result) => {
+              if (isPausedRef.current) return;
+              const trekSteps = Math.max(0, result.steps - initialStepsRef.current);
+              const calories = Math.round(trekSteps * 0.05);
+              setMetrics((prev) => ({ ...prev, steps: trekSteps, calories }));
+            });
+          } catch (e) {
+            console.error('❌ Failed to subscribe to pedometer updates:', e);
+          }
         }
       } else {
         console.warn('⚠️ Pedometer not available on this device');
@@ -704,6 +726,27 @@ export const TrekProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       if (result.success) {
         console.log('✅ SOS sent successfully');
+        
+        // ===== NOTIFY NEARBY TREKKERS (NEW FEATURE) =====
+        try {
+          console.log('📍 Notifying nearby trekkers...');
+          const nearbyResponse = await axios.post(`${apiUrl}/api/sos/nearby`, {
+            sosUserId: user?.mongo_uid || user?.firebase_id,
+            latitude: location.latitude,
+            longitude: location.longitude,
+            timestamp: new Date().toISOString(),
+            reason: triggerType,
+          });
+          
+          if (nearbyResponse.data.success) {
+            console.log(`✅ Notified ${nearbyResponse.data.notifiedCount} nearby trekkers`);
+          }
+        } catch (nearbyErr: any) {
+          console.error('⚠️ Failed to notify nearby trekkers (non-critical):', nearbyErr.message);
+          // Don't fail the main SOS - this is supplementary
+        }
+        // ===== END NEARBY NOTIFICATION =====
+        
         setSOSState(prev => ({
           ...prev,
           lastSOSSentAt: Date.now(),

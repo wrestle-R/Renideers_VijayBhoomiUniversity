@@ -1,7 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView, ActivityIndicator, Alert } from 'react-native';
 import MapView, { Polyline, Marker, PROVIDER_DEFAULT } from 'react-native-maps';
+import * as Location from 'expo-location';
 import { ThemedView } from '@/components/themed-view';
+import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
 import { useThemeColor } from '@/hooks/use-theme-color';
 import { useTrek } from '@/context/TrekContext';
@@ -92,17 +94,88 @@ export default function MapScreen() {
         longitudeDelta: 0.0421,
       };
 
+  const mapRef = useRef<any>(null);
+  const [mapRegionState, setMapRegionState] = useState(mapRegion);
+  const [autoCenter, setAutoCenter] = useState(true);
+
+  // Center map on user's current location when tracking and location updates.
+  // Update only when location has moved noticeably to avoid jitter.
+  useEffect(() => {
+    if (!currentLocation) return;
+
+    const target = {
+      latitude: currentLocation.latitude,
+      longitude: currentLocation.longitude,
+      latitudeDelta: 0.01,
+      longitudeDelta: 0.01,
+    };
+
+    // Always update internal region state
+    setMapRegionState(target);
+    console.log('Map: currentLocation update', target);
+
+    // If auto-centering is enabled (default), attempt to animate the map to the new location.
+    if (autoCenter && mapRef.current) {
+      // Try several animation methods for compatibility across platforms
+      try {
+        console.log('Map: trying animateCamera', !!mapRef.current?.animateCamera, !!mapRef.current?.animateToRegion);
+        if (typeof mapRef.current.animateCamera === 'function') {
+          mapRef.current.animateCamera({ center: { latitude: target.latitude, longitude: target.longitude } }, { duration: 400 });
+        }
+      } catch (e) { console.warn('animateCamera failed', e); }
+      try {
+        if (typeof mapRef.current.animateToRegion === 'function') {
+          mapRef.current.animateToRegion(target, 400);
+        }
+      } catch (e) { console.warn('animateToRegion failed', e); }
+    }
+  }, [currentLocation, autoCenter]);
+
+  // If the app doesn't have a `currentLocation` yet (e.g. opening map without tracking),
+  // fetch a quick current position to center the map instead of showing the fallback (San Francisco).
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      if (currentLocation) return;
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') {
+          console.warn('Location permission not granted - map will use default region');
+          return;
+        }
+        const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+        if (!mounted || !pos) return;
+        const target = {
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          latitudeDelta: 0.01,
+          longitudeDelta: 0.01,
+        };
+        setMapRegionState(target);
+      } catch (e) {
+        console.warn('Could not get device location for initial map center', e);
+      }
+    })();
+    return () => { mounted = false; };
+  }, [currentLocation]);
+
+  // Keep autoCenter enabled while tracking by default
+  useEffect(() => {
+    if (isTracking) setAutoCenter(true);
+  }, [isTracking]);
+
   return (
     <ThemedView style={styles.container}>
       {/* Map View */}
       <View style={styles.mapContainer}>
         <MapView
+          ref={mapRef}
           style={styles.map}
           provider={PROVIDER_DEFAULT}
-          region={mapRegion}
+          {...(autoCenter ? { region: mapRegionState } : { initialRegion: mapRegionState })}
           showsUserLocation
           showsMyLocationButton
-          followsUserLocation={isTracking}
+          followsUserLocation={isTracking && !autoCenter}
         >
           {path.length > 1 && (
             <Polyline
@@ -188,32 +261,69 @@ export default function MapScreen() {
             )}
           </TouchableOpacity>
         ) : (
-          <View style={styles.activeControls}>
-            <TouchableOpacity
-              style={[styles.controlButton, { backgroundColor: mutedColor as string }]}
-              onPress={isPaused ? resumeTrek : pauseTrek}
-              disabled={loading}
-            >
-              <IconSymbol name={isPaused ? 'play.fill' : 'pause.fill'} size={24} color={foregroundColor as string} />
-              <Text style={[styles.controlButtonText, { color: foregroundColor as string }]}>
-                {isPaused ? 'Resume' : 'Pause'}
-              </Text>
-            </TouchableOpacity>
+          <View style={styles.activeControlsWrapper}>
+            {/* SOS Button - Full Width */}
+            <SOSButton />
 
-            <TouchableOpacity
-              style={[styles.controlButton, styles.stopButton, { backgroundColor: destructiveColor as string }]}
-              onPress={handleStop}
-              disabled={loading}
-            >
-              <IconSymbol name="stop.fill" size={24} color="white" />
-              <Text style={[styles.controlButtonText, { color: 'white' }]}>Stop</Text>
-            </TouchableOpacity>
+            {/* Pause/Stop Controls */}
+            <View style={styles.activeControls}>
+              <TouchableOpacity
+                style={[styles.controlButton, { backgroundColor: mutedColor as string }]}
+                onPress={isPaused ? resumeTrek : pauseTrek}
+                disabled={loading}
+              >
+                <IconSymbol name={isPaused ? 'play.fill' : 'pause.fill'} size={24} color={foregroundColor as string} />
+                <Text style={[styles.controlButtonText, { color: foregroundColor as string }]}> 
+                  {isPaused ? 'Resume' : 'Pause'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.controlButton, styles.stopButton, { backgroundColor: destructiveColor as string }]}
+                onPress={handleStop}
+                disabled={loading}
+              >
+                <IconSymbol name="stop.fill" size={24} color="white" />
+                <Text style={[styles.controlButtonText, { color: 'white' }]}>Stop</Text>
+              </TouchableOpacity>
+            </View>
           </View>
         )}
       </View>
 
+      {/* Recenter button */}
+      {currentLocation && (
+        <TouchableOpacity
+          style={[styles.recenterButton, { backgroundColor: cardColor as string }]}
+          onPress={() => {
+            const target = {
+              latitude: currentLocation.latitude,
+              longitude: currentLocation.longitude,
+              latitudeDelta: 0.01,
+              longitudeDelta: 0.01,
+            };
+            console.log('Map: manual recenter pressed', target);
+            setAutoCenter(true);
+            setMapRegionState(target);
+            if (mapRef.current) {
+              try {
+                if (typeof mapRef.current.animateCamera === 'function') {
+                  mapRef.current.animateCamera({ center: { latitude: target.latitude, longitude: target.longitude } }, { duration: 300 });
+                }
+              } catch (e) { console.warn('animateCamera failed', e); }
+              try {
+                if (typeof mapRef.current.animateToRegion === 'function') {
+                  mapRef.current.animateToRegion(target, 300);
+                }
+              } catch (e) { console.warn('animateToRegion failed', e); }
+            }
+          }}
+        >
+          <Ionicons name="location-outline" size={20} color={primaryColor as string} />
+        </TouchableOpacity>
+      )}
+
       {/* SOS Components */}
-      <SOSButton />
       <FallAlertModal />
     </ThemedView>
   );
@@ -264,7 +374,7 @@ const styles = StyleSheet.create({
   },
   controlPanel: {
     position: 'absolute',
-    bottom: 120,
+    bottom: 40,
     left: 16,
     right: 16,
     borderRadius: 20,
@@ -274,6 +384,21 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 8,
+  },
+  recenterButton: {
+    position: 'absolute',
+    right: 20,
+    bottom: 110,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 6,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 6,
   },
   startButton: {
     flexDirection: 'row',
@@ -289,6 +414,10 @@ const styles = StyleSheet.create({
   },
   activeControls: {
     flexDirection: 'row',
+    gap: 12,
+  },
+  activeControlsWrapper: {
+    width: '100%',
     gap: 12,
   },
   controlButton: {

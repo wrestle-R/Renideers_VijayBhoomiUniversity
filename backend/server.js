@@ -18,6 +18,7 @@ const trekPhotoRoutes = require('./routes/trekPhotoRoutes');
 const badgeRoutes = require('./routes/badgeRoutes');
 const emergencyRoutes = require('./routes/emergencyRoutes');
 const whatsappRoutes = require('./routes/whatsappRoutes');
+const sosRoutes = require('./routes/sosRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -53,6 +54,7 @@ app.use('/api/badges', badgeRoutes);
 app.use('/api/emergency', emergencyRoutes);
 app.use('/api', trekPhotoRoutes);
 app.use('/api/whatsapp', whatsappRoutes);
+app.use('/api/sos', sosRoutes);
 
 // ---------- DB & SERVER ----------
 connectDB();

@@ -4,10 +4,15 @@
  */
 
 import React, { useState } from 'react';
-import { TouchableOpacity, Text, StyleSheet, Alert, View } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, Alert, View, StyleProp, ViewStyle } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { useTrek } from '../context/TrekContext';
 
-export const SOSButton: React.FC = () => {
+type SOSButtonProps = {
+  containerStyle?: StyleProp<ViewStyle>;
+};
+
+export const SOSButton: React.FC<SOSButtonProps> = ({ containerStyle }) => {
   const { triggerManualSOS, isTracking } = useTrek();
   const [isPressed, setIsPressed] = useState(false);
 
@@ -18,7 +23,7 @@ export const SOSButton: React.FC = () => {
 
   const handlePress = () => {
     Alert.alert(
-      '🚨 Emergency SOS',
+      'Emergency SOS',
       'This will immediately send an emergency SMS to your emergency contacts with your current location.\n\nAre you sure you want to trigger SOS?',
       [
         {
@@ -32,9 +37,9 @@ export const SOSButton: React.FC = () => {
             setIsPressed(true);
             try {
               await triggerManualSOS();
-              Alert.alert('✅ SOS Sent', 'Emergency message sent to your contacts');
+              Alert.alert('SOS Sent', 'Emergency message sent to your contacts');
             } catch (error: any) {
-              Alert.alert('❌ Error', error.message || 'Failed to send SOS');
+              Alert.alert('Error', error.message || 'Failed to send SOS');
             } finally {
               setIsPressed(false);
             }
@@ -46,37 +51,31 @@ export const SOSButton: React.FC = () => {
 
   return (
     <TouchableOpacity
-      style={[styles.button, isPressed && styles.buttonPressed]}
+      style={[styles.button, containerStyle, isPressed && styles.buttonPressed]}
       onPress={handlePress}
       activeOpacity={0.8}
       disabled={isPressed}
     >
-      <View style={styles.content}>
-        <Text style={styles.icon}>🚨</Text>
-        <Text style={styles.text}>SOS</Text>
-      </View>
+      <Ionicons name="alert-circle" size={24} color="#fff" />
+      <Text style={styles.text}>SOS</Text>
     </TouchableOpacity>
   );
 };
 
 const styles = StyleSheet.create({
   button: {
-    position: 'absolute',
-    bottom: 120,
-    right: 20,
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    backgroundColor: '#EF4444',
-    justifyContent: 'center',
+    flexDirection: 'row',
     alignItems: 'center',
-    elevation: 8,
+    justifyContent: 'center',
+    paddingVertical: 16,
+    borderRadius: 16,
+    gap: 8,
+    backgroundColor: '#EF4444',
+    elevation: 6,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
+    shadowOpacity: 0.15,
     shadowRadius: 6,
-    borderWidth: 4,
-    borderColor: '#DC2626',
   },
   buttonPressed: {
     backgroundColor: '#B91C1C',
@@ -86,15 +85,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  icon: {
-    fontSize: 28,
-    marginBottom: 4,
-  },
   text: {
     color: '#FFFFFF',
     fontSize: 16,
-    fontWeight: 'bold',
+    fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: 1,
   },
 });

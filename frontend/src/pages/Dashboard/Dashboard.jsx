@@ -175,7 +175,7 @@ export default function Dashboard() {
                             Add your bio, location, and experience level to connect with more trekkers.
                           </p>
                         </div>
-                        <Button variant="outline" onClick={() => navigate(`/profile/${user.mongo_uid}`)}>
+                        <Button variant="outline" onClick={() => navigate('/dashboard/profiles')}>
                           Complete Profile
                         </Button>
                       </div>

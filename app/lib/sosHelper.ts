@@ -9,8 +9,8 @@ import * as Location from 'expo-location';
 import { Linking, Platform } from 'react-native';
 
 // Fall detection thresholds - LOWERED FOR TESTING
-const FALL_ACCELERATION_THRESHOLD = 2.5; // Very low for testing (m/s²) - normal is ~25
-const GYRO_ROTATION_THRESHOLD = 3; // Rapid rotation (rad/s) - indicates tumbling
+const FALL_ACCELERATION_THRESHOLD = 10; // Very low for testing (m/s²) - normal is ~25
+const GYRO_ROTATION_THRESHOLD = 15; // Rapid rotation (rad/s) - indicates tumbling
 const POST_FALL_MOTION_THRESHOLD = 1.5; // Near-zero movement after fall
 const POST_FALL_CHECK_DURATION = 800; // 0.8 seconds to check for immobility
 const FALL_COOLDOWN_MS = 10000; // 10 seconds cooldown for testing (normal: 30s)

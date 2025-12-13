@@ -123,7 +123,11 @@ export default function HomeScreen() {
       }
     });
 
-    const avgSpeed = totalActivities > 0 ? totalSpeed / totalActivities : 0;
+    // Speed units handling:
+    // - `summary.averageSpeed` is expected to be in meters per second (m/s).
+    // - We aggregate speeds in m/s (internal unit) and convert to km/h only for UI/display.
+    const avgSpeedMps = totalActivities > 0 ? totalSpeed / totalActivities : 0; // m/s
+    const avgSpeedKmh = avgSpeedMps * 3.6; // convert to km/h for display
     const recentActivities = activities.slice(0, 5);
 
     return {
@@ -132,7 +136,7 @@ export default function HomeScreen() {
       totalDuration: totalDuration / 3600, // Convert to hours
       totalCalories,
       totalElevation,
-      avgSpeed,
+      avgSpeed: avgSpeedKmh, // km/h for UI
       recentActivities,
       weeklyStats,
       monthlyProgress: {

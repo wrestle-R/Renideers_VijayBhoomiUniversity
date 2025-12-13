@@ -101,6 +101,8 @@ const ActivitySchema = new mongoose.Schema({
 ActivitySchema.index({ userId: 1, startTime: -1 });
 ActivitySchema.index({ firebaseUid: 1, status: 1 });
 ActivitySchema.index({ createdAt: -1 });
+// Index for nearby SOS queries (active treks with locations)
+ActivitySchema.index({ status: 1, 'path.timestamp': -1 });
 
 // Methods
 ActivitySchema.methods.addLocationPoint = function(point) {
