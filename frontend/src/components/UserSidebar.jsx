@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { Home, LogOut, User, Compass, Users, Mountain, Camera } from "lucide-react";
+import { Home, LogOut, User, Compass, Users, Mountain, Camera, Activity } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { ThemeToggle } from "./ThemeToggle";
@@ -25,7 +25,7 @@ export function UserSidebar() {
     { icon: Compass, label: "Community", path: "/explore" },
     { icon: Mountain, label: "Treks", path: "/treks" },
     { icon: Users, label: "Clubs", path: "/clubs" },
-    
+    { icon: Activity, label: "My Activities", path: "/my-activities" },
     { icon: Camera, label: "Trek Vision", path: "/trek-ai" },
     { icon: Users, label:"Badges", path:"/badges"},
   ];

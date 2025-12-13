@@ -302,6 +302,21 @@ exports.getFeed = async (req, res) => {
   }
 };
 
+exports.getMyActivities = async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const activities = await Activity.find({ userId: userId })
+      .sort({ startTime: -1 })
+      .populate('userId', 'fullName photoUrl username');
+      
+    activities.forEach(activity => validateActivityData(activity));
+    res.json(activities);
+  } catch (error) {
+    console.error('Error fetching my activities:', error);
+    res.status(500).json({ error: 'Server error' });
+  }
+};
+
 exports.getActivityById = async (req, res) => {
   try {
     const activity = await Activity.findById(req.params.id).populate('userId', 'fullName photoUrl username');

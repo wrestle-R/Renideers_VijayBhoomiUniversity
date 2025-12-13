@@ -21,6 +21,7 @@ export default function Dashboard() {
   const [profileLoading, setProfileLoading] = useState(true);
   const [viewMode, setViewMode] = useDashboardViewMode('dashboard');
   const [pendingRequests, setPendingRequests] = useState([]);
+  const [myActivitiesCount, setMyActivitiesCount] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -79,10 +80,22 @@ export default function Dashboard() {
         }
       };
 
+      const fetchMyActivitiesCount = async () => {
+        try {
+          const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/activities/my-activities`, {
+            headers: { 'x-user-id': user.mongo_uid }
+          });
+          setMyActivitiesCount(res.data.length);
+        } catch (error) {
+          console.error("Error fetching my activities count:", error);
+        }
+      };
+
       fetchStats();
       fetchFriends();
       checkProfileCompletion();
       fetchPendingRequests();
+      fetchMyActivitiesCount();
     }
   }, [user]);
 
@@ -123,7 +136,7 @@ export default function Dashboard() {
                 {/* Pending Requests Notification */}
                 {pendingRequests.length > 0 && (
                   <Card className="border-2 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
-                    <CardContent className="pt-6">
+                    <CardContent className="pt-2">
                       <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                         <div className="flex items-center gap-4 min-w-0">
                           <Bell className="h-8 w-8 text-blue-600 dark:text-blue-400 flex-shrink-0" />
@@ -148,155 +161,166 @@ export default function Dashboard() {
                 )}
 
                 {/* Profile Completion Indicator */}
-                {!profileLoading && (
-              <Card className={`border-2 ${profileComplete ? 'border-green-200 bg-green-50 dark:bg-green-950 dark:border-green-800' : 'border-amber-200 bg-amber-50 dark:bg-amber-950 dark:border-amber-800'}`}>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                    <div className="flex items-center gap-4 min-w-0">
-                      {profileComplete ? (
-                        <CheckCircle2 className="h-8 w-8 text-green-600 dark:text-green-400 flex-shrink-0" />
-                      ) : (
-                        <AlertCircle className="h-8 w-8 text-amber-600 dark:text-amber-400 flex-shrink-0" />
-                      )}
-                      <div className="min-w-0">
-                        <p className={`font-semibold truncate ${profileComplete ? 'text-green-900 dark:text-green-100' : 'text-amber-900 dark:text-amber-100'}`}>
-                          {profileComplete ? "Profile Complete" : "Complete Your Profile"}
-                        </p>
-                        <p className={`text-sm leading-snug ${profileComplete ? 'text-green-700 dark:text-green-200' : 'text-amber-700 dark:text-amber-200'}`}>
-                          {profileComplete ? "Great! Your profile is all set up." : "Add more details to your profile to help others find you."}
-                        </p>
-                      </div>
-                    </div>
-                    <Button 
-                      onClick={() => navigate("/dashboard/profiles")}
-                      className={`w-full md:w-auto flex-shrink-0 ${profileComplete ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-amber-600 hover:bg-amber-700 text-white'}`}
-                    >
-                      {profileComplete ? "View Profile" : "Complete Profile"}
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-            
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Followers
-                  </CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.followersCount}</div>
-                  <Link to="/followers" className="text-xs text-muted-foreground hover:underline">
-                    View all
-                  </Link>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Following
-                  </CardTitle>
-                  <Users className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.followingCount}</div>
-                  <Link to="/followers" className="text-xs text-muted-foreground hover:underline">
-                    View all
-                  </Link>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Total Treks
-                  </CardTitle>
-                  <Mountain className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">0</div>
-                  <p className="text-xs text-muted-foreground">
-                    +0% from last month
-                  </p>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">
-                    Distance Travelled
-                  </CardTitle>
-                  <MapPin className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">12.5 km</div>
-                  <p className="text-xs text-muted-foreground">
-                    this week
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-2">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Profile</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex items-center gap-4 p-4">
-                    <Avatar className="h-16 w-16">
-                      <AvatarImage src={user.photoUrl} />
-                      <AvatarFallback>{user.fullName?.charAt(0)}</AvatarFallback>
-                    </Avatar>
-                    <div>
-                      <p className="text-lg font-medium">{user.fullName}</p>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              <Card>
-                <CardHeader>
-                  <CardTitle>My Friends</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {friends.length === 0 ? (
-                      <p className="text-sm text-muted-foreground">No friends yet. Go explore!</p>
-                    ) : (
-                      friends.map(friend => (
-                        <div key={friend._id} className="flex items-center gap-4">
-                          <Avatar className="h-10 w-10">
-                            <AvatarImage src={friend.photoUrl} />
-                            <AvatarFallback>{friend.fullName?.charAt(0)}</AvatarFallback>
-                          </Avatar>
-                          <div>
-                            <Link to={`/${friend.username || friend._id}`} className="font-medium hover:underline text-foreground">
-                              {friend.fullName}
-                            </Link>
-                          </div>
+                {!profileLoading && !profileComplete && (
+                  <Card className="border-l-4 border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">
+                    <CardContent className="pt-2">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-1">
+                          <h3 className="font-semibold text-yellow-900 dark:text-yellow-200">Complete Your Profile</h3>
+                          <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                            Add your bio, location, and experience level to connect with more trekkers.
+                          </p>
                         </div>
-                      ))
-                    )}
-                    <Link to="/explore">
-                      <button className="w-full mt-4 text-sm text-primary hover:underline">
-                        Find more friends
-                      </button>
-                    </Link>
+                        <Button variant="outline" onClick={() => navigate(`/profile/${user.mongo_uid}`)}>
+                          Complete Profile
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                )}
+
+                {/* My Activities Mobile Card */}
+                <Card className="lg:hidden">
+                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-sm font-medium">
+                      My Activities
+                    </CardTitle>
+                    <Activity className="h-4 w-4 text-muted-foreground" />
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold">{myActivitiesCount}</div>
+                    <p className="text-xs text-muted-foreground">
+                      Recorded activities
+                    </p>
+                    <Button 
+                      className="w-full mt-4" 
+                      variant="outline"
+                      onClick={() => navigate('/my-activities')}
+                    >
+                      Show my activities
+                    </Button>
+                  </CardContent>
+                </Card>
+
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Followers
+                      </CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{stats.followersCount}</div>
+                      <Link to="/followers" className="text-xs text-muted-foreground hover:underline">
+                        View all
+                      </Link>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Following
+                      </CardTitle>
+                      <Users className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">{stats.followingCount}</div>
+                      <Link to="/followers" className="text-xs text-muted-foreground hover:underline">
+                        View all
+                      </Link>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Total Treks
+                      </CardTitle>
+                      <Mountain className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">0</div>
+                      <p className="text-xs text-muted-foreground">
+                        +0% from last month
+                      </p>
+                    </CardContent>
+                  </Card>
+                  <Card>
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                      <CardTitle className="text-sm font-medium">
+                        Distance Travelled
+                      </CardTitle>
+                      <MapPin className="h-4 w-4 text-muted-foreground" />
+                    </CardHeader>
+                    <CardContent>
+                      <div className="text-2xl font-bold">12.5 km</div>
+                      <p className="text-xs text-muted-foreground">
+                        this week
+                      </p>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-2">
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Profile</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex items-center gap-4 p-4">
+                        <Avatar className="h-16 w-16">
+                          <AvatarImage src={user.photoUrl} />
+                          <AvatarFallback>{user.fullName?.charAt(0)}</AvatarFallback>
+                        </Avatar>
+                        <div>
+                          <p className="text-lg font-medium">{user.fullName}</p>
+                          <p className="text-sm text-muted-foreground">{user.email}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>My Friends</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-4">
+                        {friends.length === 0 ? (
+                          <p className="text-sm text-muted-foreground">No friends yet. Go explore!</p>
+                        ) : (
+                          friends.map(friend => (
+                            <div key={friend._id} className="flex items-center gap-4">
+                              <Avatar className="h-10 w-10">
+                                <AvatarImage src={friend.photoUrl} />
+                                <AvatarFallback>{friend.fullName?.charAt(0)}</AvatarFallback>
+                              </Avatar>
+                              <div>
+                                <Link to={`/${friend.username || friend._id}`} className="font-medium hover:underline text-foreground">
+                                  {friend.fullName}
+                                </Link>
+                              </div>
+                            </div>
+                          ))
+                        )}
+                        <Link to="/explore">
+                          <button className="w-full mt-4 text-sm text-primary hover:underline">
+                            Find more friends
+                          </button>
+                        </Link>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+                </div>
+                ) : (
+                  <div className="space-y-6">
+                    <ActivityFeed />
                   </div>
-                </CardContent>
-              </Card>
-            </div>
-            </div>
-            ) : (
-              <div className="space-y-6">
-                <ActivityFeed />
+                )}
               </div>
-            )}
+            </main>
           </div>
-        </main>
-      </div>
-    </SidebarProvider>
-  );
-}
+        </SidebarProvider>
+      );
+    }

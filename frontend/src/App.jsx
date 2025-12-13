@@ -22,6 +22,7 @@ import ClubDetails from "./pages/Dashboard/ClubDetails";
 import { AIChatbot } from "./components/AIChatbot";
 import Badges from "./pages/Badges";
 import ActivityDetail from "./pages/ActivityDetail";
+import MyActivities from "./pages/MyActivities";
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useUser();
@@ -127,6 +128,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute>
             <ActivityDetail />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/my-activities" 
+        element={
+          <ProtectedRoute>
+            <MyActivities />
           </ProtectedRoute>
         } 
       />

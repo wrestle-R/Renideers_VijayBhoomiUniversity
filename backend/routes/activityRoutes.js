@@ -4,6 +4,7 @@ const activityController = require('../controllers/activityController');
 const auth = require('../middleware/auth');
 
 router.get('/feed', auth, activityController.getFeed);
+router.get('/my-activities', auth, activityController.getMyActivities);
 router.get('/:id', auth, activityController.getActivityById);
 router.get('/:id/insights', auth, activityController.getActivityInsights);
 
