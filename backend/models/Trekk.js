@@ -13,6 +13,8 @@ const TrekkSchema = new mongoose.Schema({
   images: [{ type: String, required: true }],
   inDepthDescription: { type: String, required: true },
   vrImage: { type: String }, 
+  latitude: { type: Number },      // <-- Add this
+  longitude: { type: Number }, 
 }, { timestamps: true });
 
 module.exports = mongoose.model('Trekk', TrekkSchema);
