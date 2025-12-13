@@ -1,3 +1,16 @@
+/* Custom input box style for all input fields */
+.fancy-input {
+  border: 2px solid var(--primary, #4f46e5);
+  background: oklch(0.995 0.01 250 / 0.15);
+  border-radius: 0.5rem;
+  box-shadow: 0 2px 8px 0 oklch(0.7 0 0 / 0.07);
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+.fancy-input:focus {
+  border-color: var(--ring, #6366f1);
+  box-shadow: 0 4px 16px 0 oklch(0.7 0 0 / 0.13);
+  outline: none;
+}
 @import "tailwindcss";
 @import "tw-animate-css";
 

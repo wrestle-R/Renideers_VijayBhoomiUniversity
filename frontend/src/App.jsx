@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { UserProvider, useUser } from "./context/UserContext";
 import { ThemeProvider } from "./context/ThemeContext";
@@ -20,6 +21,8 @@ import Clubs from "./pages/Dashboard/Clubs";
 import ClubDetails from "./pages/Dashboard/ClubDetails";
 import { AIChatbot } from "./components/AIChatbot";
 import Badges from "./pages/Badges";
+import ActivityDetail from "./pages/ActivityDetail";
+import MyActivities from "./pages/MyActivities";
 import ActivityDetail from "./pages/ActivityDetail"
 
 const ProtectedRoute = ({ children }) => {
@@ -121,6 +124,22 @@ function AppRoutes() {
           </ProtectedRoute>
         }
       />
+      <Route 
+        path="/activity/:id" 
+        element={
+          <ProtectedRoute>
+            <ActivityDetail />
+          </ProtectedRoute>
+        } 
+      />
+      <Route 
+        path="/my-activities" 
+        element={
+          <ProtectedRoute>
+            <MyActivities />
+          </ProtectedRoute>
+        } 
+      />
       <Route
         path="/activity/:id"
         element={
@@ -167,6 +186,24 @@ function AppRoutes() {
 }
 
 function App() {
+  useEffect(() => {
+    // Track page navigation by storing current path
+    const handleRouteChange = () => {
+      const currentPath = window.location.pathname;
+      const excludedPaths = ['/auth', '/'];
+      if (!excludedPaths.includes(currentPath)) {
+        localStorage.setItem('lastVisitedPage', currentPath);
+      }
+    };
+
+    // Store initial page
+    handleRouteChange();
+
+    // Listen for popstate events (back/forward navigation)
+    window.addEventListener('popstate', handleRouteChange);
+    return () => window.removeEventListener('popstate', handleRouteChange);
+  }, []);
+
   return (
     <UserProvider>
       <ThemeProvider>

@@ -28,6 +28,7 @@ const ProfileSchema = new mongoose.Schema({
 
     // optional user details
     location: { type: String, trim: true },
+    phoneNumber: { type: String, trim: true },
 
     experienceLevel: {
         type: String,
@@ -37,6 +38,14 @@ const ProfileSchema = new mongoose.Schema({
     preferredActivities: [{ type: String, trim: true }], // e.g. ['day-hike','multi-day','trail-running']
     preferredTrails: [PreferredTrailSchema],
     badges: [{ type: mongoose.Schema.Types.ObjectId, ref: 'Badge' }],
+
+    // emergency contact information for safety / rescue
+    emergencyContact: {
+        name: { type: String, trim: true },
+        phone: { type: String, trim: true },
+        altPhone: { type: String, trim: true },
+        relationship: { type: String, trim: true },
+    },
 
     // rewards & verification metadata
     rewards: {
