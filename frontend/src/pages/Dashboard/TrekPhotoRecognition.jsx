@@ -5,8 +5,23 @@ import { SidebarProvider } from '../../components/ui/sidebar';
 import { UserSidebar } from '../../components/UserSidebar';
 
 const TrekPhotoRecognition = () => {
-  const [capturedImage, setCapturedImage] = useState(null);
-  const [results, setResults] = useState(null);
+  const [capturedImage, setCapturedImage] = useState(() => {
+    try {
+      const last = JSON.parse(localStorage.getItem('trek_ai_last'));
+      return last?.image || null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  const [results, setResults] = useState(() => {
+    try {
+      const last = JSON.parse(localStorage.getItem('trek_ai_last'));
+      return last?.result || null;
+    } catch (e) {
+      return null;
+    }
+  });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [useCamera, setUseCamera] = useState(false);
   const [stream, setStream] = useState(null);
@@ -39,18 +54,7 @@ const TrekPhotoRecognition = () => {
     }
   }, []);
 
-  // Load last analysis (image + results) so page refresh preserves UI
-  useEffect(() => {
-    try {
-      const last = JSON.parse(localStorage.getItem('trek_ai_last')) || null;
-      if (last && last.image && last.result) {
-        setCapturedImage(last.image);
-        setResults(last.result);
-      }
-    } catch (e) {
-      // ignore parse errors
-    }
-  }, []);
+  // (Initialization from localStorage is done synchronously during state setup)
 
   useEffect(() => {
     const onDocClick = (e) => {
