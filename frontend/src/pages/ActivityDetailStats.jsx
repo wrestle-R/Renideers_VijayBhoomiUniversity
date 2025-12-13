@@ -71,8 +71,10 @@ export default function ActivityDetailStats() {
   const navigate = useNavigate();
   const [activity, setActivity] = useState(null);
   const [insights, setInsights] = useState(null);
+  const [paceSplits, setPaceSplits] = useState(null);
   const [loading, setLoading] = useState(true);
   const [insightsLoading, setInsightsLoading] = useState(false);
+  const [paceSplitsLoading, setPaceSplitsLoading] = useState(false);
   const [error, setError] = useState(null);
   const [showInsights, setShowInsights] = useState(false);
 
@@ -113,6 +115,34 @@ export default function ActivityDetailStats() {
     } finally {
       setInsightsLoading(false);
     }
+  };
+
+  const fetchPaceSplits = async () => {
+    try {
+      setPaceSplitsLoading(true);
+      const res = await axios.get(`${import.meta.env.VITE_API_URL}/api/activities/${id}/pace-splits?unit=km`, {
+        headers: { 'x-user-id': user?.mongo_uid }
+      });
+      setPaceSplits(res.data);
+    } catch (err) {
+      console.error("Error fetching pace splits:", err);
+    } finally {
+      setPaceSplitsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user && id && activity) {
+      fetchPaceSplits();
+    }
+  }, [user, id, activity]);
+
+  const formatPaceNumeric = (pace) => {
+    const num = Number(pace);
+    if (!isFinite(num) || num <= 0) return '0:00';
+    const minutes = Math.floor(num);
+    const seconds = Math.round((num - minutes) * 60);
+    return `${minutes}:${String(seconds).padStart(2, '0')}`;
   };
 
   if (loading) {
@@ -314,6 +344,123 @@ export default function ActivityDetailStats() {
                 )}
               </div>
             )}
+
+            {/* Pace Per Kilometer/Mile Section */}
+            {paceSplitsLoading ? (
+              <Card>
+                <CardContent className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                </CardContent>
+              </Card>
+            ) : paceSplits && paceSplits.splits && paceSplits.splits.length > 0 ? (
+              <Card className="border-2 border-primary/20">
+                <CardHeader className="bg-gradient-to-r from-primary/5 to-transparent">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="flex items-center gap-2 text-xl">
+                      <Clock className="h-6 w-6 text-primary" />
+                      Pace Per {paceSplits.unit === 'km' ? 'Kilometer' : 'Mile'}
+                    </CardTitle>
+                    <div className="text-sm text-muted-foreground">
+                      {paceSplits.splitCount} {paceSplits.unit === 'km' ? 'km' : 'mile'} splits • {paceSplits.totalDistance} {paceSplits.unit}
+                    </div>
+                  </div>
+                </CardHeader>
+                <CardContent className="pt-6">
+                  <ResponsiveContainer width="100%" height={400}>
+                    <BarChart 
+                      data={paceSplits.splits}
+                      margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+                      <XAxis 
+                        dataKey="label"
+                        angle={-45}
+                        textAnchor="end"
+                        height={100}
+                        style={{ fontSize: '12px' }}
+                      />
+                      <YAxis 
+                        label={{ 
+                          value: `Pace (min/${paceSplits.unit})`, 
+                          angle: -90, 
+                          position: 'insideLeft',
+                          style: { fontSize: '14px', fontWeight: 'bold' }
+                        }}
+                        domain={['auto', 'auto']}
+                      />
+                      <Tooltip 
+                        contentStyle={{ 
+                          backgroundColor: '#1f2937', 
+                          border: '1px solid rgba(59, 130, 246, 0.5)', 
+                          borderRadius: '8px', 
+                          color: '#fff',
+                          padding: '12px'
+                        }}
+                        formatter={(value, name, props) => {
+                          if (name === 'pace') {
+                            const paceFormatted = props && props.payload && props.payload.paceFormatted
+                              ? props.payload.paceFormatted
+                              : (typeof value === 'number' ? formatPaceNumeric(value) : value);
+                            return [paceFormatted, `Pace (min/${paceSplits.unit})`];
+                          }
+                          return [value, name];
+                        }}
+                        labelFormatter={(label) => `Split: ${label}`}
+                      />
+                      <Legend 
+                        wrapperStyle={{ paddingTop: '20px' }}
+                        formatter={(value) => value === 'pace' ? `Pace (min/${paceSplits.unit})` : value}
+                      />
+                      <Bar
+                        dataKey="pace"
+                        fill="#3b82f6"
+                        name="pace"
+                        radius={[8, 8, 0, 0]}
+                        label={{
+                          position: 'top',
+                          formatter: (value, entry) => {
+                            return (entry && entry.payload && entry.payload.paceFormatted) || formatPaceNumeric(value);
+                          },
+                          style: { fontSize: '11px', fontWeight: 'bold' }
+                        }}
+                      />
+                    </BarChart>
+                  </ResponsiveContainer>
+                  
+                  {/* Pace Summary Table */}
+                  <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg text-center">
+                      <div className="text-sm text-muted-foreground mb-1">Best Pace</div>
+                      <div className="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                        {Math.min(...paceSplits.splits.map(s => s.pace)).toFixed(2)} 
+                        <span className="text-xs ml-1">min/{paceSplits.unit}</span>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-orange-50 dark:bg-orange-950/30 rounded-lg text-center">
+                      <div className="text-sm text-muted-foreground mb-1">Slowest Pace</div>
+                      <div className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+                        {Math.max(...paceSplits.splits.map(s => s.pace)).toFixed(2)}
+                        <span className="text-xs ml-1">min/{paceSplits.unit}</span>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-green-50 dark:bg-green-950/30 rounded-lg text-center">
+                      <div className="text-sm text-muted-foreground mb-1">Avg Pace</div>
+                      <div className="text-2xl font-bold text-green-600 dark:text-green-400">
+                        {(paceSplits.splits.reduce((acc, s) => acc + s.pace, 0) / paceSplits.splits.length).toFixed(2)}
+                        <span className="text-xs ml-1">min/{paceSplits.unit}</span>
+                      </div>
+                    </div>
+                    <div className="p-4 bg-purple-50 dark:bg-purple-950/30 rounded-lg text-center">
+                      <div className="text-sm text-muted-foreground mb-1">Total Splits</div>
+                      <div className="text-2xl font-bold text-purple-600 dark:text-purple-400">
+                        {paceSplits.splitCount}
+                        <span className="text-xs ml-1">{paceSplits.unit}s</span>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            ) : null}
 
             {/* Map Section Removed */}
 

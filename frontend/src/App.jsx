@@ -211,7 +211,6 @@ function App() {
         <Router>
           <AppRoutes />
           <Toaster position="top-right" />
-          <AIChatbot />
         </Router>
       </ThemeProvider>
     </UserProvider>
