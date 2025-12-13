@@ -7,5 +7,7 @@ router.post('/summary', aiController.getTrekSummary);
 router.post('/chat', aiController.chat);
 router.post('/optimize', aiController.optimizeItinerary);
 router.post('/estimate', aiController.estimateDifficulty);
+router.post('/analyze-profile', aiController.analyzeProfile);
+router.post('/consistency-suggestions', aiController.getConsistencySuggestions);
 
 module.exports = router;

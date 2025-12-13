@@ -11,6 +11,7 @@ import axios from "axios";
 import { Link, useNavigate } from "react-router-dom";
 import { ActivityFeed } from "../../components/ActivityFeed";
 import { useDashboardViewMode } from "../../hooks/useDashboardViewMode";
+import { MotivationalQuotes } from "../../components/MotivationalQuotes";
 
 export default function Dashboard() {
   const { user } = useUser();
@@ -133,6 +134,9 @@ export default function Dashboard() {
 
             {viewMode === 'dashboard' ? (
               <div className="space-y-8">
+                {/* Motivational Quotes Section */}
+                <MotivationalQuotes />
+
                 {/* Pending Requests Notification */}
                 {pendingRequests.length > 0 && (
                   <Card className="border-2 border-blue-200 bg-blue-50 dark:bg-blue-950 dark:border-blue-800">
