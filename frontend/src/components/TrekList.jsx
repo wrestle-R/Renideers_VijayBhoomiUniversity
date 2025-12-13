@@ -1,4 +1,3 @@
-
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "./ui/card";
@@ -7,6 +6,7 @@ import { Button } from "./ui/button";
 import { Mountain, Search, Filter } from "lucide-react";
 import { AIItineraryOptimizer } from "./AIItineraryOptimizer";
 import { AIDifficultyEstimator } from "./AIDifficultyEstimator";
+import VR360Modal from "../pages/VRView"; // (create this component below)
 
 
 const DIFFICULTY_OPTIONS = ["All", "Easy", "Moderate", "Difficult"];
@@ -20,6 +20,7 @@ const TrekList = () => {
   const [difficulty, setDifficulty] = useState("All");
   const [season, setSeason] = useState("All");
   const [sort, setSort] = useState("title");
+  const [vrImage, setVrImage] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -196,8 +197,24 @@ const TrekList = () => {
                   <span className="ml-2 group-hover/btn:translate-x-1 transition-transform">→</span>
                 </Button>
               </CardContent>
+              {trek.vrImage && (
+                <Button
+                  variant="secondary"
+                  className="mt-2"
+                  onClick={e => {
+                    e.stopPropagation();
+                    setVrImage(trek.vrImage);
+                  }}
+                >
+                  View in VR
+                </Button>
+              )}
             </Card>
           ))}
+          {/* VR Modal */}
+          {vrImage && (
+            <VR360Modal imageUrl={vrImage} onClose={() => setVrImage(null)} />
+          )}
         </div>
       )}
     </div>

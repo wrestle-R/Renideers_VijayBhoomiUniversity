@@ -12,6 +12,7 @@ const TrekkSchema = new mongoose.Schema({
   highlights: [{ type: String, required: true }],
   images: [{ type: String, required: true }],
   inDepthDescription: { type: String, required: true },
+  vrImage: { type: String }, 
 }, { timestamps: true });
 
 module.exports = mongoose.model('Trekk', TrekkSchema);
