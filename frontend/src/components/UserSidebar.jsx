@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useUser } from "../context/UserContext";
-import { Home, LogOut, User, Compass, Users, Mountain, Camera, Activity } from "lucide-react";
+import { Home, LogOut, User, Compass, Users, Mountain, Camera, Activity, Award } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "./ui/avatar";
 import { Button } from "./ui/button";
 import { ThemeToggle } from "./ThemeToggle";
@@ -27,7 +27,7 @@ export function UserSidebar() {
     { icon: Mountain, label: "Treks", path: "/treks" },
     { icon: Camera, label: "Trek Vision", path: "/trek-ai" },
     { icon: Users, label: "Clubs", path: "/clubs" },
-    { icon: Users, label:"Badges", path:"/badges"},
+    { icon: Award, label:"Badges", path:"/badges"},
   ];
 
   const isActive = (path) => location.pathname === path;
