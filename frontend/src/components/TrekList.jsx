@@ -76,8 +76,8 @@ function matchesSeason(trekSeasonText = "", selectedSeason) {
 function MapController({ center, zoom }) {
   const map = useMap();
   React.useEffect(() => {
-    if (center) {
-      map.flyTo(center, zoom, { duration: 2 });
+    if (center && zoom) {
+      map.flyTo(center, zoom, { duration: 2 }); // 2 seconds for slow zoom
     }
   }, [center, zoom, map]);
   return null;
@@ -158,6 +158,12 @@ const TrekList = () => {
                   key={t._id}
                   position={[t.latitude, t.longitude]}
                   icon={customIcon}
+                  eventHandlers={{
+                    click: () => {
+                      setMapCenter([t.latitude, t.longitude]);
+                      setMapZoom(13); // Slow zoom in
+                    }
+                  }}
                 >
                   <Popup>
                     <strong>{t.title}</strong>
