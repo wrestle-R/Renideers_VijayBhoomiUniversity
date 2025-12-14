@@ -22,11 +22,11 @@ export function UserSidebar() {
 
   const menuItems = [
     { icon: Home, label: "Dashboard", path: "/dashboard" },
-    { icon: Activity, label: "My Activities", path: "/my-activities" },
-    { icon: Compass, label: "Community", path: "/explore" },
     { icon: Mountain, label: "Treks", path: "/treks" },
+    { icon: Compass, label: "Community", path: "/explore" },
     { icon: Camera, label: "Trek Vision", path: "/trek-ai" },
     { icon: Users, label: "Clubs", path: "/clubs" },
+    { icon: Activity, label: "My Activities", path: "/my-activities" },
     { icon: Award, label:"Badges", path:"/badges"},
   ];
 
