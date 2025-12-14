@@ -8,6 +8,7 @@ import { ArrowLeft } from "lucide-react";
 import { AIDifficultyEstimator } from "@/components/AIDifficultyEstimator";
 import { AIQuickSummary } from "@/components/AIQuickSummary";
 import { ItineraryFlow } from "@/components/ItineraryFlow";
+import OfflineMapDownloader from "@/components/OfflineMapDownloader";
 
 const TrekDetail = () => {
   const { id } = useParams();
@@ -114,6 +115,9 @@ const TrekDetail = () => {
                 <AIQuickSummary trek={trek} />
 
                 <AIDifficultyEstimator trekData={trek} />
+
+                {/* Offline Map Downloader */}
+                <OfflineMapDownloader trek={trek} />
 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   <div className="p-4 bg-secondary/50 rounded-lg">
