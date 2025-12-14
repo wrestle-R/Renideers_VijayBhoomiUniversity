@@ -117,7 +117,7 @@ export default function HeroSection() {
                                     delay={0.5}
                                     as="p"
                                     className="mx-auto mt-8 max-w-2xl text-balance text-lg">
-                                    Record hikes, share them with friends, and view local mountain updates in real time. AI verifies treks and a blockchain reward system automatically sends tokens.
+                                    Discover hidden trails, connect with fellow adventurers, and share your hiking journey. Our platform helps you plan, track, and celebrate every trek while building a vibrant community of explorers.
                                 </TextEffect>
 
                                 <AnimatedGroup
