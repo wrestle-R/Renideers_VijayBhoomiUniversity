@@ -108,7 +108,7 @@ export default function HeroSection() {
                                     speedSegment={0.3}
                                     as="h1"
                                     className="mx-auto mt-8 max-w-4xl text-balance text-5xl max-md:font-semibold md:text-7xl lg:mt-16 xl:text-[5.25rem]">
-                                    Track Your Treks, Earn Rewards
+                                    Track Your Treks, Better
                                 </TextEffect>
                                 <TextEffect
                                     per="line"
@@ -117,7 +117,7 @@ export default function HeroSection() {
                                     delay={0.5}
                                     as="p"
                                     className="mx-auto mt-8 max-w-2xl text-balance text-lg">
-                                    Discover hidden trails, connect with fellow adventurers, and share your hiking journey. Our platform helps you plan, track, and celebrate every trek while building a vibrant community of explorers.
+                                    Discover hidden trails, connect with fellow adventurers, and share your hiking journey. Our platform helps you plan, track, and celebrate every trek.
                                 </TextEffect>
 
                                 <AnimatedGroup
