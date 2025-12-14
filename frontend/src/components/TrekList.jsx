@@ -97,6 +97,7 @@ const TrekList = () => {
 
   const [mapCenter, setMapCenter] = useState([19.07283, 72.88261]);
   const [mapZoom, setMapZoom] = useState(6);
+  const [activeTrekId, setActiveTrekId] = useState(null); // <-- ADD THIS LINE
 
   const navigate = useNavigate();
 
@@ -135,6 +136,16 @@ const TrekList = () => {
   );
 
 
+  const handleViewCard = (trek) => {
+    setActiveTrekId(trek._id); // Now this will work
+    setTimeout(() => {
+      const element = document.getElementById(`trek-card-${trek._id}`);
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
+    }, 100);
+  };
+
   if (loading) return null;
   if (error) return <div>Error: {error}</div>;
 
@@ -169,6 +180,14 @@ const TrekList = () => {
                     <strong>{t.title}</strong>
                     <br />
                     {t.location}
+                    <br />
+                    <Button
+                      className="mt-2"
+                      size="sm"
+                      onClick={() => handleViewCard(t)}
+                    >
+                      View Card
+                    </Button>
                   </Popup>
                 </Marker>
               )
@@ -232,8 +251,13 @@ const TrekList = () => {
         {filtered.map((trek) => (
           <Card
             key={trek._id}
+            id={`trek-card-${trek._id}`}
             onClick={() => navigate(`/treks/${trek._id}`)}
-            className="cursor-pointer overflow-hidden hover:shadow-2xl transition"
+            className={`cursor-pointer overflow-hidden hover:shadow-2xl transition-all duration-300 ${
+              activeTrekId === trek._id 
+                ? "ring-4 ring-primary ring-offset-4 shadow-2xl scale-105" 
+                : ""
+            }`}
           >
             {/* IMAGE AS BACKGROUND */}
             <div
